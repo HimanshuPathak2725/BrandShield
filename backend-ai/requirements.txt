@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+exa-py
+pandas
+prophet
+langgraph
+langchain
+langchain-community
+transformers
+torch
+sentence-transformers
+redis
+pymongo
+python-dotenv
+requests
+pydantic

@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  backend-ai:
+    build: ./backend-ai
+    container_name: brandshield-ai
+    volumes:
+      - ./backend-ai:/app
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      - EXA_API_KEY=${EXA_API_KEY}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URI=mongodb://mongo:27017/brandshield
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - mongo
+    networks:
+      - brandshield-net
+
+  backend-user:
+    build: ./backend-user
+    container_name: brandshield-user
+    volumes:
+      - ./backend-user:/app
+      - /app/node_modules
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URI=mongodb://mongo:27017/brandshield
+      - AI_SERVICE_URL=http://backend-ai:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - mongo
+      - backend-ai
+    networks:
+      - brandshield-net
+
+  frontend:
+    build: ./frontend
+    container_name: brandshield-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3001:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+    depends_on:
+      - backend-user
+    networks:
+      - brandshield-net
+
+  mongo:
+    image: mongo:latest
+    container_name: brandshield-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - brandshield-net
+
+  redis:
+    image: redis:alpine
+    container_name: brandshield-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - brandshield-net
+
+volumes:
+  mongo-data:
+  hf-cache:
+
+networks:
+  brandshield-net:
+    driver: bridge
