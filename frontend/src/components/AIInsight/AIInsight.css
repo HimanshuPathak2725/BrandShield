@@ -1,0 +1,67 @@
+.ai-insight-section {
+  grid-column: span 12;
+}
+
+.ai-insight-card {
+  background: #15172b;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  position: relative;
+  border: 1px solid;
+  border-image: linear-gradient(135deg, #1224e2 0%, #a855f7 50%, #60a5fa 100%) 1;
+}
+
+.ai-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(18, 36, 226, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  color: #1224e2;
+}
+
+.ai-content {
+  flex: 1;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.ai-badge {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #9296c9;
+  background: #232648;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.ai-text {
+  font-size: 0.875rem;
+  color: #d1d5db;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-text .highlight {
+  color: white;
+  font-weight: 600;
+}

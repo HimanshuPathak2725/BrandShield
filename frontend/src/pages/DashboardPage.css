@@ -1,0 +1,50 @@
+.dashboard-page {
+  background: linear-gradient(180deg, #101222 0%, #1a1d3a 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+.dashboard-main {
+  padding: 2rem;
+  flex: 1;
+}
+
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .dashboard-sidebar {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 1rem;
+  }
+
+  .dashboard-container {
+    gap: 1.5rem;
+  }
+}
