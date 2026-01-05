@@ -27,6 +27,7 @@ class AgentState(TypedDict):
     raw_content: List[Dict[str, Any]]
     filtered_content: List[Dict[str, Any]]
     sentiment_stats: Dict[str, Any]
+    risk_metrics: Dict[str, Any]
     emotion_analysis: Dict[str, Any]
     rag_findings: str
     rag_findings_structured: List[Dict[str, Any]]

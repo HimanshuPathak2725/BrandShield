@@ -112,6 +112,28 @@ def plot_sentiment_pie_plotly(sentiment_stats):
     return fig
 
 
+def plot_risk_gauge(score):
+    """Create a gauge chart for Risk Score"""
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = score,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Reputation Risk Index"},
+        gauge = {
+            'axis': {'range': [None, 100]},
+            'bar': {'color': "darkred" if score > 80 else "orange" if score > 50 else "green"},
+            'steps': [
+                {'range': [0, 20], 'color': "lightgreen"},
+                {'range': [20, 50], 'color': "lightyellow"},
+                {'range': [50, 80], 'color': "orange"},
+                {'range': [80, 100], 'color': "red"}],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': 80}}))
+    return fig
+
+
 def main():
     """Main Streamlit application"""
     
@@ -184,6 +206,34 @@ def main():
         result = st.session_state['result']
         brand_name = st.session_state['brand_name']
         sentiment_stats = result['sentiment_stats']
+        
+        st.markdown("---")
+        
+        # --- NEW: WAR ROOM DASHBOARD ---
+        st.markdown("## 🚨 Crisis Command Center")
+        
+        risk_metrics = result.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.plotly_chart(plot_risk_gauge(risk_metrics["score"]), use_container_width=True)
+            
+        with col2:
+            st.metric(
+                label="Sentiment Velocity", 
+                value=f"{risk_metrics['velocity']}%", 
+                delta=f"{risk_metrics['velocity']}%",
+                delta_color="inverse"
+            )
+            st.info("Rate of negative sentiment change (Last 1hr vs 4hrs)")
+            
+        with col3:
+            st.metric(label="Risk Level", value=risk_metrics["level"])
+            if risk_metrics["level"] in ["HIGH", "CRITICAL"]:
+                st.error("⚠️ CRITICAL ALERT: Immediate Action Required")
+            else:
+                st.success("✅ Status: Stable")
         
         st.markdown("---")
         

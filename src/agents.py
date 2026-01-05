@@ -528,6 +528,43 @@ def rag_agent(state: AgentState) -> AgentState:
                         if sentiment_vader.polarity_scores(item["text"])['compound'] < -0.05)
     neutral_count = len(filtered_content) - positive_count - negative_count
     
+    # --- NEW: Calculate Risk Metrics (VoltGear Scenario) ---
+    # 1. Risk Score (0-100)
+    # Formula: (Negative% * 0.6) + (Viral Risk * 0.4)
+    total_items = len(filtered_content) if filtered_content else 1
+    negative_pct = (negative_count / total_items) * 100
+    viral_risk_val = 0
+    if emotion_analysis['viral_risk'] == "High": viral_risk_val = 100
+    elif emotion_analysis['viral_risk'] == "Medium": viral_risk_val = 50
+    
+    reputation_risk_score = (negative_pct * 0.6) + (viral_risk_val * 0.4)
+    
+    # 2. Sentiment Velocity
+    # Compare negative posts in last 1 hour vs previous 4 hours
+    recent_negatives = 0
+    past_negatives = 0
+    
+    for item in filtered_content:
+        is_negative = sentiment_vader.polarity_scores(item["text"])['compound'] < -0.05
+        if is_negative:
+            hours_ago = item.get('hours_ago', 99)
+            if hours_ago <= 1:
+                recent_negatives += 1
+            elif 1 < hours_ago <= 5:
+                past_negatives += 1
+                
+    # Avoid division by zero
+    base = past_negatives if past_negatives > 0 else 1
+    velocity = ((recent_negatives - past_negatives) / base) * 100
+    
+    state["risk_metrics"] = {
+        "score": round(reputation_risk_score, 1),
+        "level": "CRITICAL" if reputation_risk_score > 80 else "HIGH" if reputation_risk_score > 50 else "MEDIUM" if reputation_risk_score > 20 else "LOW",
+        "velocity": round(velocity, 1),
+        "recent_negatives": recent_negatives,
+        "past_negatives": past_negatives
+    }
+    
     state["sentiment_stats"] = {
         "positive": positive_count,
         "negative": negative_count,
@@ -628,6 +665,8 @@ You are the Chief Brand Strategist for {topic}.
 Your job is to write a high-level strategic report for the CEO based on the following data.
 
 ### 📊 DATA INPUTS
+- **Risk Score:** {risk_score}/100 ({risk_level})
+- **Sentiment Velocity:** {velocity}% (Rate of change in negative sentiment)
 - **Overall Sentiment:** {overall_sentiment}
 - **Sentiment Stats:** Positive: {positive}, Negative: {negative}, Neutral: {neutral}
 - **Dominant Emotion:** {dominant_emotion} (Viral Risk: {viral_risk})
@@ -640,13 +679,17 @@ Your job is to write a high-level strategic report for the CEO based on the foll
 ### 🎯 INSTRUCTIONS
 Write a professional, actionable strategic report in Markdown format.
 The report MUST include the following sections:
+
 1. **EXECUTIVE SUMMARY**: Brief overview of the brand's current health.
-2. **RISK ASSESSMENT**: Determine if this is a LOW, MEDIUM, HIGH, or CRITICAL crisis.
+2. **RISK ASSESSMENT**: Analyze the Risk Score and Velocity.
 3. **STRATEGIC RECOMMENDATIONS**:
-   - **Immediate Actions (24-48 Hours)**: Specific, urgent steps.
-   - **Short-Term Actions (2-4 Weeks)**: Process improvements.
-   - **Long-Term Actions (3-6 Months)**: Strategic shifts.
-4. **KPIs TO TRACK**: 3-5 metrics to monitor progress.
+   - **Option 1: Empathetic Response**: (If fault is likely) "We are aware..."
+   - **Option 2: Precautionary Response**: (If safety risk) "Stop using..."
+   - **Option 3: Factual/Defensive Response**: (If misinformation) "Our data shows..."
+4. **CRISIS CHECKLIST**:
+   - [ ] Action 1
+   - [ ] Action 2
+   - [ ] Action 3
 
 **Tone:** Professional, objective, and decisive. Avoid fluff.
 **Format:** Use Markdown headers (##), bullet points, and bold text.
@@ -656,12 +699,17 @@ The report MUST include the following sections:
     
     prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["topic", "overall_sentiment", "positive", "negative", "neutral", 
+        input_variables=["topic", "risk_score", "risk_level", "velocity", "overall_sentiment", "positive", "negative", "neutral", 
                          "dominant_emotion", "viral_risk", "rag_findings", "critic_feedback"]
     )
     
+    risk_metrics = state.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
+    
     formatted_prompt = prompt.format(
         topic=topic,
+        risk_score=risk_metrics["score"],
+        risk_level=risk_metrics["level"],
+        velocity=risk_metrics["velocity"],
         overall_sentiment=sentiment_stats.get('overall_sentiment', 'Unknown'),
         positive=sentiment_stats.get('positive', 0),
         negative=sentiment_stats.get('negative', 0),
@@ -671,6 +719,8 @@ The report MUST include the following sections:
         rag_findings=rag_findings,
         critic_feedback=critic_feedback if critic_feedback else "None. This is the first draft."
     )
+    
+
     
     try:
         print("   🧠 Invoking LLM for strategy generation...")
