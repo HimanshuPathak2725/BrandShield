@@ -12,8 +12,8 @@ class AgentState(TypedDict):
         topic: The brand name or topic to analyze
         raw_content: List of raw search results/web mentions
         filtered_content: List of time-filtered content (past 2 days only)
-        sentiment_stats: Dictionary containing sentiment analysis results
-        emotion_analysis: Advanced emotion tracking (anger, sadness, joy, etc.)
+        sentiment_statsysis results
+        emotion_analysis: Advanced emotion tracking (a: Dictionary containing sentiment analnger, sadness, joy, etc.)
         rag_findings: Findings from RAG semantic search analysis
         rag_quality_score: Quality score from CRAG relevance checking
         draft_report: Initial draft from Strategy Agent (for HITL)
@@ -29,6 +29,7 @@ class AgentState(TypedDict):
     sentiment_stats: Dict[str, Any]
     emotion_analysis: Dict[str, Any]
     rag_findings: str
+    rag_findings_structured: List[Dict[str, Any]]
     rag_quality_score: float
     draft_report: str
     critic_feedback: str

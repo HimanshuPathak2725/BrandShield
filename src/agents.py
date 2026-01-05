@@ -34,6 +34,8 @@ except ImportError:
 
 from src.state import AgentState
 from src.advanced_agents import analyze_emotions, check_rag_relevance, refine_search_query
+from src.llm_utils import get_llm
+from langchain.prompts import PromptTemplate
 
 
 # ============================================================================
@@ -235,6 +237,16 @@ def evaluator_agent(state: AgentState) -> AgentState:
                 # Calculate time ago
                 time_diff = current_time - pub_datetime
                 
+                # Handle future dates (clock skew or API issues)
+                if time_diff.total_seconds() < 0:
+                    time_ago = "Just now"
+                    item['time_ago'] = time_ago
+                    item['hours_ago'] = 0
+                    item['is_recent'] = True
+                    item['formatted_date'] = pub_datetime.strftime("%B %d, %Y at %I:%M %p UTC")
+                    filtered_content.append(item)
+                    continue
+
                 # Format time ago string
                 if time_diff.total_seconds() < 3600:  # Less than 1 hour
                     minutes = int(time_diff.total_seconds() / 60)
@@ -385,9 +397,18 @@ def rag_agent(state: AgentState) -> AgentState:
     }
     
     findings = []
+    structured_findings = []
     sentiment_vader = SentimentIntensityAnalyzer()
     risk_score = 0
     total_relevance = 0
+    
+    # Initialize LLM for strict analysis
+    try:
+        llm_strict = get_llm(temperature=0.1, max_new_tokens=10)
+        print("   🤖 LLM initialized for strict sentiment verification")
+    except:
+        llm_strict = None
+        print("   ⚠️ LLM not available for strict verification, falling back to VADER")
     
     for category, query in risk_queries.items():
         print(f"  🎯 Semantic search: {category.replace('_', ' ').title()}")
@@ -408,25 +429,67 @@ def rag_agent(state: AgentState) -> AgentState:
         total_relevance += (1 if is_relevant else 0.5)
         
         if results:
+            category_findings = {
+                "category": category.replace('_', ' ').title(),
+                "relevance": "High" if is_relevant else "Refined",
+                "items": []
+            }
+            
             findings.append(f"\n## 🛡️ {category.replace('_', ' ').title()}")
             findings.append(f"*Semantic matches found: {len(results)} | Relevance: {'✅ High' if is_relevant else '⚠️ Refined'}*\n")
             
             for doc in results:
                 # Extract sentiment for evidence
                 sentiment_score = sentiment_vader.polarity_scores(doc.page_content)
-                sentiment_label = "🔴 Negative" if sentiment_score['compound'] < -0.05 else \
-                                "🟢 Positive" if sentiment_score['compound'] > 0.05 else "🟡 Neutral"
+                compound_score = sentiment_score['compound']
+                
+                # STRICT ANALYSIS: Use LLM to verify negative sentiment
+                sentiment_label = "Neutral"
+                if compound_score < -0.05:
+                    sentiment_label = "Negative"
+                    # Verify with LLM if available
+                    if llm_strict:
+                        try:
+                            prompt = (f"Analyze this text. Is it expressing negative sentiment, frustration, or criticism "
+                                     f"towards the brand/product? Answer only YES or NO.\n\nText: {doc.page_content[:500]}")
+                            response = llm_strict.invoke(prompt)
+                            if "NO" in str(response).upper():
+                                sentiment_label = "Neutral" # Downgrade if LLM disagrees
+                                compound_score = 0.0 # Reset score
+                        except Exception as e:
+                            print(f"      ⚠️ LLM verification failed: {e}")
+                elif compound_score > 0.05:
+                    sentiment_label = "Positive"
+                
+                # Update label with emoji
+                sentiment_display = f"🔴 {sentiment_label}" if sentiment_label == "Negative" else \
+                                  f"🟢 {sentiment_label}" if sentiment_label == "Positive" else f"🟡 {sentiment_label}"
                 
                 # Increment risk score for negative findings
-                if sentiment_score['compound'] < -0.05:
+                if sentiment_label == "Negative":
                     risk_score += 1
                 
+                # Add to structured findings
+                category_findings["items"].append({
+                    "source": doc.metadata.get('title', 'Unknown'),
+                    "url": doc.metadata.get('source', '#'),
+                    "time_ago": doc.metadata.get('time_ago', 'Unknown'),
+                    "sentiment_label": sentiment_label,
+                    "sentiment_display": sentiment_display,
+                    "score": compound_score,
+                    "context": doc.page_content
+                })
+
                 findings.append(f"**Evidence #{results.index(doc) + 1}:**")
                 findings.append(f"- Source: {doc.metadata.get('title', 'Unknown')}")
                 findings.append(f"- Posted: {doc.metadata.get('time_ago', 'Unknown')}")
-                findings.append(f"- Sentiment: {sentiment_label} (Score: {sentiment_score['compound']:.2f})")
+                findings.append(f"- Sentiment: {sentiment_display} (Score: {compound_score:.2f})")
                 findings.append(f"- Context: \"{doc.page_content[:250]}...\"")
                 findings.append("")
+            
+            structured_findings.append(category_findings)
+    
+    state["rag_findings_structured"] = structured_findings
     
     # Calculate CRAG quality score
     rag_quality_score = total_relevance / len(risk_queries)
@@ -540,11 +603,9 @@ def strategy_agent(state: AgentState) -> AgentState:
     """
     Strategy Agent: Creates a detailed CEO-level strategic report DRAFT.
     
-    Analyzes findings and provides Immediate, Short-term, and Long-term actions.
-    
-    Note: This creates a DRAFT that will be reviewed by the Critic Agent.
+    Uses an LLM to analyze findings and provide Immediate, Short-term, and Long-term actions.
     """
-    print("📊 Strategy Agent: Generating strategic report draft...")
+    print("📊 Strategy Agent: Generating strategic report draft using LLM...")
     
     topic = state["topic"]
     sentiment_stats = state["sentiment_stats"]
@@ -553,141 +614,75 @@ def strategy_agent(state: AgentState) -> AgentState:
     revision_count = state.get("revision_count", 0)
     critic_feedback = state.get("critic_feedback", "")
     
-    # Build the strategic report
-    report = f"""
-# 🎯 CHIEF STRATEGIST REPORT: {topic}
+    # Initialize LLM
+    try:
+        llm = get_llm()
+    except Exception as e:
+        print(f"⚠️ Failed to initialize LLM: {e}. Falling back to template.")
+        # Fallback logic could go here, but for now we'll just print error
+        # In a real app, we might want a robust fallback
+    
+    # Construct the prompt
+    prompt_template = """
+You are the Chief Brand Strategist for {topic}. 
+Your job is to write a high-level strategic report for the CEO based on the following data.
 
-**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-
----
-
-## 📈 EXECUTIVE SUMMARY
-
-**Overall Brand Sentiment:** {sentiment_stats['overall_sentiment']}
-
-**Sentiment Distribution:**
-- ✅ Positive: {sentiment_stats['positive']} ({sentiment_stats['positive']/sentiment_stats['total']*100:.1f}%)
-- ⚠️ Neutral: {sentiment_stats['neutral']} ({sentiment_stats['neutral']/sentiment_stats['total']*100:.1f}%)
-- ❌ Negative: {sentiment_stats['negative']} ({sentiment_stats['negative']/sentiment_stats['total']*100:.1f}%)
-
-**Compound Sentiment Score:** {sentiment_stats['vader_compound']:.3f}
-
----
-
-## 🔍 KEY FINDINGS FROM RAG ANALYSIS
-
+### 📊 DATA INPUTS
+- **Overall Sentiment:** {overall_sentiment}
+- **Sentiment Stats:** Positive: {positive}, Negative: {negative}, Neutral: {neutral}
+- **Dominant Emotion:** {dominant_emotion} (Viral Risk: {viral_risk})
+- **RAG Analysis Findings:** 
 {rag_findings}
 
----
+### 📝 CRITIC FEEDBACK (If any, you MUST address this):
+{critic_feedback}
 
-## 🚨 RISK ASSESSMENT
+### 🎯 INSTRUCTIONS
+Write a professional, actionable strategic report in Markdown format.
+The report MUST include the following sections:
+1. **EXECUTIVE SUMMARY**: Brief overview of the brand's current health.
+2. **RISK ASSESSMENT**: Determine if this is a LOW, MEDIUM, HIGH, or CRITICAL crisis.
+3. **STRATEGIC RECOMMENDATIONS**:
+   - **Immediate Actions (24-48 Hours)**: Specific, urgent steps.
+   - **Short-Term Actions (2-4 Weeks)**: Process improvements.
+   - **Long-Term Actions (3-6 Months)**: Strategic shifts.
+4. **KPIs TO TRACK**: 3-5 metrics to monitor progress.
 
+**Tone:** Professional, objective, and decisive. Avoid fluff.
+**Format:** Use Markdown headers (##), bullet points, and bold text.
+
+### GENERATED REPORT:
 """
     
-    # Determine crisis level
-    crisis_level = "LOW"
-    if sentiment_stats['negative'] > sentiment_stats['total'] * 0.5:
-        crisis_level = "CRITICAL"
-    elif sentiment_stats['negative'] > sentiment_stats['total'] * 0.3:
-        crisis_level = "HIGH"
-    elif sentiment_stats['negative'] > sentiment_stats['total'] * 0.15:
-        crisis_level = "MEDIUM"
+    prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["topic", "overall_sentiment", "positive", "negative", "neutral", 
+                         "dominant_emotion", "viral_risk", "rag_findings", "critic_feedback"]
+    )
     
-    report += f"**Crisis Level:** {crisis_level}\n\n"
+    formatted_prompt = prompt.format(
+        topic=topic,
+        overall_sentiment=sentiment_stats.get('overall_sentiment', 'Unknown'),
+        positive=sentiment_stats.get('positive', 0),
+        negative=sentiment_stats.get('negative', 0),
+        neutral=sentiment_stats.get('neutral', 0),
+        dominant_emotion=emotion_analysis.get('dominant_emotion', 'Unknown'),
+        viral_risk=emotion_analysis.get('viral_risk', 'Unknown'),
+        rag_findings=rag_findings,
+        critic_feedback=critic_feedback if critic_feedback else "None. This is the first draft."
+    )
     
-    if crisis_level in ["CRITICAL", "HIGH"]:
-        report += "⚠️ **IMMEDIATE ACTION REQUIRED** - Brand reputation is at significant risk.\n\n"
-    
-    # Strategic recommendations
-    report += """---
+    try:
+        print("   🧠 Invoking LLM for strategy generation...")
+        report = llm.invoke(formatted_prompt)
+        
+        # Add metadata footer
+        report += "\n\n---\n\n*This report was generated by BrandShield_Lite Elite AI (Zephyr-7b)*"
+        
+    except Exception as e:
+        print(f"   ❌ LLM Generation Failed: {e}")
+        report = f"ERROR: Could not generate report due to LLM failure.\n\nDetails: {e}"
 
-## 🎯 STRATEGIC RECOMMENDATIONS
-
-### ⚡ IMMEDIATE ACTIONS (Next 24-48 Hours)
-
-"""
-    
-    if "hate_speech" in rag_findings.lower() or "offensive" in rag_findings.lower():
-        report += "1. **Crisis Communication Protocol**\n"
-        report += "   - Activate social media monitoring team\n"
-        report += "   - Issue public statement addressing hate speech concerns\n"
-        report += "   - Report and remove offensive content on all platforms\n\n"
-    
-    if "safety" in rag_findings.lower() or "dangerous" in rag_findings.lower():
-        report += "2. **Product Safety Review**\n"
-        report += "   - Immediate investigation of reported safety issues\n"
-        report += "   - Consider product recall if necessary\n"
-        report += "   - Transparent communication with customers about safety measures\n\n"
-    
-    if "bug" in rag_findings.lower() or "crash" in rag_findings.lower():
-        report += "3. **Technical Emergency Response**\n"
-        report += "   - Deploy emergency patch for critical bugs\n"
-        report += "   - Provide status updates to affected users\n"
-        report += "   - Set up dedicated support channel for technical issues\n\n"
-    
-    report += """
-### 📅 SHORT-TERM ACTIONS (Next 2-4 Weeks)
-
-1. **Customer Experience Audit**
-   - Conduct comprehensive user feedback analysis
-   - Identify pain points in customer journey
-   - Implement quick-win improvements
-
-2. **Brand Reputation Management**
-   - Launch positive PR campaign
-   - Engage with influencers and brand advocates
-   - Showcase customer success stories
-
-3. **Product Quality Enhancement**
-   - Prioritize bug fixes and stability improvements
-   - Enhance QA testing procedures
-   - Beta test new features with select user groups
-
-### 🎯 LONG-TERM ACTIONS (Next 3-6 Months)
-
-1. **Brand Transformation Initiative**
-   - Develop comprehensive brand refresh strategy
-   - Invest in customer loyalty programs
-   - Build community engagement platforms
-
-2. **Innovation & Development**
-   - Roadmap for next-generation products
-   - Implement continuous feedback loops
-   - Adopt agile development practices
-
-3. **Risk Mitigation Framework**
-   - Establish real-time brand monitoring system
-   - Create crisis management playbook
-   - Train teams on reputation management
-
----
-
-## 💡 KEY PERFORMANCE INDICATORS (KPIs)
-
-Track these metrics weekly:
-- Net Promoter Score (NPS)
-- Customer Satisfaction Score (CSAT)
-- Social Media Sentiment Score
-- Support Ticket Resolution Time
-- Product Bug Count & Severity
-
----
-
-## 🎬 CONCLUSION
-
-"""
-    
-    if crisis_level == "CRITICAL":
-        report += f"The brand **{topic}** is facing a critical reputation crisis. Immediate executive attention and resources are required to prevent long-term damage."
-    elif crisis_level == "HIGH":
-        report += f"The brand **{topic}** is experiencing significant negative sentiment. Swift action is needed to address customer concerns and restore trust."
-    elif crisis_level == "MEDIUM":
-        report += f"The brand **{topic}** has some concerning issues that require attention. Proactive measures can prevent escalation."
-    else:
-        report += f"The brand **{topic}** is in good standing overall. Continue monitoring and maintain current positive trajectory with suggested improvements."
-    
-    report += "\n\n---\n\n*This report was generated by BrandShield_Lite Elite AI Analysis System*"
-    
     # Store as draft for Critic review
     state["draft_report"] = report
     state["revision_count"] = revision_count

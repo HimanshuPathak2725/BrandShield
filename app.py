@@ -43,6 +43,14 @@ st.markdown("""
         border-radius: 0.5rem;
         margin: 0.5rem 0;
     }
+    .result-card {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
+        border: 1px solid #f0f0f0;
+    }
     .positive { color: #28a745; }
     .negative { color: #dc3545; }
     .neutral { color: #ffc107; }
@@ -233,31 +241,55 @@ def main():
         
         st.markdown("---")
         
-        # Raw Data Expander
-        with st.expander("🔍 View Raw Data", expanded=False):
+        # RAG Findings (Structured)
+        st.subheader("🧠 AI Semantic Analysis")
+        
+        rag_structured = result.get('rag_findings_structured', [])
+        if rag_structured:
+            for category_data in rag_structured:
+                with st.expander(f"{category_data['category']} ({len(category_data['items'])} matches)", expanded=True):
+                    st.caption(f"Relevance: {category_data['relevance']}")
+                    
+                    # Grid layout for findings
+                    cols = st.columns(3)
+                    for idx, item in enumerate(category_data['items']):
+                        with cols[idx % 3]:
+                            st.markdown(f"""
+                            <div class="result-card">
+                                <div style="font-weight:bold; margin-bottom:5px;">{item['sentiment_display']}</div>
+                                <div style="font-size:0.9em; margin-bottom:5px; height: 40px; overflow: hidden; text-overflow: ellipsis;">
+                                    <a href="{item['url']}" target="_blank" style="text-decoration: none; color: #0366d6;">{item['source']}</a>
+                                </div>
+                                <div style="font-size:0.8em; color:#666; margin-bottom:10px;">🕒 {item['time_ago']}</div>
+                                <div style="font-size:0.85em; font-style:italic; color: #444; background: #f9f9f9; padding: 8px; border-radius: 4px;">
+                                    "{item['context'][:120]}..."
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+        else:
+            st.info("✅ No critical issues found in semantic analysis.")
+
+        st.markdown("---")
+
+        # Raw Data Expander (Cleaner)
+        with st.expander("🔍 View All Search Results", expanded=False):
             st.subheader("Search Results (Past 2 Days)")
             
-            # Display filtered content with timestamps
             if 'filtered_content' in result and result['filtered_content']:
                 for idx, item in enumerate(result['filtered_content'], 1):
                     with st.container():
                         col1, col2 = st.columns([3, 1])
                         with col1:
-                            st.markdown(f"**{idx}. {item['title']}**")
-                            st.caption(f"🔗 {item['url']}")
+                            st.markdown(f"**{idx}. [{item['title']}]({item['url']})**")
                         with col2:
                             is_recent = item.get('is_recent', False)
                             time_badge = "🔥 BREAKING" if is_recent else "📅"
                             st.markdown(f"{time_badge} **{item.get('time_ago', 'Unknown')}**")
-                            st.caption(item.get('formatted_date', 'Date unavailable'))
                         
-                        st.text(item['text'][:200] + "..." if len(item['text']) > 200 else item['text'])
-                        st.markdown("---")
+                        st.markdown(f"_{item['text'][:200]}..._")
+                        st.divider()
             else:
                 st.info("No filtered content available")
-            
-            st.subheader("RAG Findings")
-            st.text(result['rag_findings'])
         
         st.markdown("---")
         

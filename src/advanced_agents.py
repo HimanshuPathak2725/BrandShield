@@ -15,6 +15,8 @@ except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
 from src.state import AgentState
+from src.llm_utils import get_llm
+from langchain.prompts import PromptTemplate
 
 
 # ============================================================================
@@ -233,7 +235,7 @@ def refine_search_query(original_query: str, topic: str) -> str:
 
 def critic_agent(state: AgentState) -> AgentState:
     """
-    Legal/PR Critic Agent: Reviews strategy reports for issues.
+    Legal/PR Critic Agent: Reviews strategy reports for issues using LLM.
     
     Checks for:
     - Hallucinations (unsupported claims)
@@ -243,132 +245,93 @@ def critic_agent(state: AgentState) -> AgentState:
     
     Returns feedback and approval status.
     """
-    print("🎭 Critic Agent: Reviewing strategic report...")
+    print("🎭 Critic Agent: Reviewing strategic report using LLM...")
     
     draft_report = state.get("draft_report", state.get("final_report", ""))
     rag_findings = state["rag_findings"]
     emotion_analysis = state.get("emotion_analysis", {})
     revision_count = state.get("revision_count", 0)
     
-    issues = []
-    severity = []
-    
-    # ============================================================================
-    # CHECK 1: Hallucination Detection
-    # ============================================================================
-    print("   🔍 Check 1: Scanning for unsupported claims...")
-    
-    # Check if report makes claims not backed by RAG findings
-    action_keywords = ['will', 'promise', 'guarantee', 'commit', 'ensure']
-    for keyword in action_keywords:
-        if keyword in draft_report.lower():
-            if 'immediate investigation' not in draft_report.lower():
-                issues.append(f"⚠️ Contains promise '{keyword}' without concrete action plan")
-                severity.append('MEDIUM')
-    
-    # ============================================================================
-    # CHECK 2: Tone-Deafness Detection
-    # ============================================================================
-    print("   🎭 Check 2: Analyzing tone appropriateness...")
-    
-    inappropriate_phrases = [
-        'don\'t worry', 'calm down', 'overreacting', 'not a big deal',
-        'just a few', 'minor issue', 'isolated incident'
-    ]
-    
-    for phrase in inappropriate_phrases:
-        if phrase in draft_report.lower():
-            issues.append(f"🔴 TONE-DEAF: Contains dismissive phrase: '{phrase}'")
-            severity.append('HIGH')
-    
-    # Check if high anger but report lacks urgency
-    if emotion_analysis.get('viral_risk') == 'HIGH':
-        if 'immediate' not in draft_report.lower() and 'urgent' not in draft_report.lower():
-            issues.append("🔴 MISMATCH: High anger detected but report lacks urgency")
-            severity.append('HIGH')
-    
-    # ============================================================================
-    # CHECK 3: Legal Liability
-    # ============================================================================
-    print("   ⚖️ Check 3: Checking for legal liability...")
-    
-    risky_phrases = [
-        'admit fault', 'we are responsible', 'we caused', 'our mistake',
-        'compensation', 'refund all', 'sue'
-    ]
-    
-    for phrase in risky_phrases:
-        if phrase in draft_report.lower():
-            issues.append(f"⚖️ LEGAL RISK: Contains potentially liable statement: '{phrase}'")
-            severity.append('CRITICAL')
-    
-    # ============================================================================
-    # CHECK 4: Completeness
-    # ============================================================================
-    print("   📋 Check 4: Verifying completeness...")
-    
-    required_sections = ['immediate action', 'short-term', 'long-term']
-    for section in required_sections:
-        if section not in draft_report.lower():
-            issues.append(f"📋 INCOMPLETE: Missing '{section}' section")
-            severity.append('MEDIUM')
-    
-    # Check if critical findings are addressed
-    if 'safety' in rag_findings.lower() and 'safety' not in draft_report.lower():
-        issues.append("🔴 CRITICAL: Safety issues found but not addressed in report")
-        severity.append('CRITICAL')
-    
-    # ============================================================================
-    # DECISION: APPROVE OR REJECT
-    # ============================================================================
-    
-    critical_count = severity.count('CRITICAL')
-    high_count = severity.count('HIGH')
-    
-    if critical_count > 0 or high_count > 1:
-        approved = False
-        decision = "❌ REJECTED"
-        print(f"   ❌ Report REJECTED ({critical_count} critical, {high_count} high severity issues)")
-    elif len(issues) > 0 and revision_count < 2:
-        approved = False
-        decision = "⚠️ NEEDS REVISION"
-        print(f"   ⚠️ Report needs revision ({len(issues)} issues found)")
-    else:
-        approved = True
-        decision = "✅ APPROVED"
-        print("   ✅ Report APPROVED by Critic")
-    
-    # Compile feedback
-    if issues:
-        feedback = f"""
-## 🎭 CRITIC AGENT REVIEW - {decision}
+    # Initialize LLM
+    try:
+        llm = get_llm()
+    except Exception as e:
+        print(f"⚠️ Failed to initialize LLM: {e}. Falling back to manual approval.")
+        state["critic_approved"] = True
+        state["critic_feedback"] = "⚠️ Critic Agent skipped due to LLM error."
+        return state
 
-**Revision #{revision_count + 1}**
+    # Construct the prompt
+    prompt_template = """
+You are a Senior Legal & PR Crisis Consultant. 
+Your job is to "Red Team" (critique) a draft strategic report.
 
-### Issues Identified:
+### 📄 DRAFT REPORT TO REVIEW:
+{draft_report}
+
+### 🔍 CONTEXT (GROUND TRUTH):
+- **RAG Findings:** {rag_findings}
+- **Viral Risk:** {viral_risk}
+
+### 🎯 INSTRUCTIONS
+Analyze the report for the following risks:
+1. **Hallucinations**: Does it make claims not supported by the RAG findings?
+2. **Tone Deafness**: Is the tone appropriate for the crisis level? (e.g., too casual during a safety crisis)
+3. **Legal Liability**: Does it admit fault or promise compensation without legal review?
+4. **Completeness**: Does it address all critical issues found in the RAG analysis?
+
+### 📝 OUTPUT FORMAT
+You must output your review in the following format:
+
+**DECISION:** [APPROVED or REJECTED]
+
+**ISSUES FOUND:**
+- [SEVERITY: HIGH/MEDIUM/LOW] Description of issue 1
+- [SEVERITY: HIGH/MEDIUM/LOW] Description of issue 2
+
+**FEEDBACK FOR STRATEGIST:**
+(Specific instructions on how to fix the report)
+
+**Note:** 
+- Reject the report if there are ANY "HIGH" severity issues.
+- Approve the report if there are only "LOW" or no issues.
 """
-        for i, (issue, sev) in enumerate(zip(issues, severity), 1):
-            feedback += f"\n{i}. [{sev}] {issue}"
+
+    prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["draft_report", "rag_findings", "viral_risk"]
+    )
+    
+    formatted_prompt = prompt.format(
+        draft_report=draft_report,
+        rag_findings=rag_findings,
+        viral_risk=emotion_analysis.get('viral_risk', 'Unknown')
+    )
+    
+    try:
+        print("   🧠 Invoking LLM for critique...")
+        critique = llm.invoke(formatted_prompt)
         
-        feedback += "\n\n### Recommendations:\n"
-        if not approved:
-            feedback += "- Address all CRITICAL and HIGH severity issues before resubmission\n"
-            feedback += "- Ensure tone matches the severity of the crisis\n"
-            feedback += "- Back all claims with evidence from RAG findings\n"
-            feedback += "- Consult legal team before making any liability statements\n"
+        # Parse decision
+        if "DECISION: APPROVED" in critique or "DECISION: **APPROVED**" in critique:
+            approved = True
+            print("   ✅ Report APPROVED by Critic (LLM)")
         else:
-            feedback += "- Minor issues noted but acceptable for publication\n"
-            feedback += "- Recommend final human review via HITL checkpoint\n"
-    else:
-        feedback = f"""
-## 🎭 CRITIC AGENT REVIEW - ✅ APPROVED
+            approved = False
+            print("   ❌ Report REJECTED by Critic (LLM)")
+            
+        # Force approval if max revisions reached to prevent infinite loop
+        if revision_count >= 2 and not approved:
+            print("   ⚠️ Max revisions reached. Forcing approval with warning.")
+            approved = True
+            critique += "\n\n⚠️ **NOTE:** Max revisions reached. Proceeding with known issues."
 
-**Revision #{revision_count + 1}**
+    except Exception as e:
+        print(f"   ❌ LLM Critique Failed: {e}")
+        critique = f"ERROR: Could not generate critique due to LLM failure.\n\nDetails: {e}"
+        approved = True # Fail open to avoid blocking
 
-No issues found. Report is ready for human approval.
-"""
-    
-    state["critic_feedback"] = feedback
+    state["critic_feedback"] = critique
     state["critic_approved"] = approved
     
     return state
