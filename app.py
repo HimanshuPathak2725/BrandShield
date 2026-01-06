@@ -12,16 +12,15 @@ import sys
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.graph import run_analysis
+from src.graph import create_phase1_graph, create_phase2_graph
 from src.state import AgentState
-
 
 # Load environment variables
 load_dotenv()
 
 # Page configuration
 st.set_page_config(
-    page_title="BrandShield Lite",
+    page_title="BrandShield Deep Research",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -62,19 +61,18 @@ def plot_sentiment_pie_matplotlib(sentiment_stats):
     """Create a pie chart using Matplotlib"""
     labels = ['Positive', 'Neutral', 'Negative']
     sizes = [
-        sentiment_stats['positive'],
-        sentiment_stats['neutral'],
-        sentiment_stats['negative']
+        sentiment_stats.get('positive', 0),
+        sentiment_stats.get('neutral', 0),
+        sentiment_stats.get('negative', 0)
     ]
     colors = ['#28a745', '#ffc107', '#dc3545']
-    explode = (0.05, 0, 0.05)  # Explode positive and negative slices
+    explode = (0.05, 0, 0.05)
     
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.pie(sizes, explode=explode, labels=labels, colors=colors,
            autopct='%1.1f%%', shadow=True, startangle=90)
     ax.axis('equal')
     plt.title('Sentiment Distribution', fontsize=16, fontweight='bold')
-    
     return fig
 
 
@@ -82,9 +80,9 @@ def plot_sentiment_pie_plotly(sentiment_stats):
     """Create an interactive pie chart using Plotly"""
     labels = ['Positive', 'Neutral', 'Negative']
     values = [
-        sentiment_stats['positive'],
-        sentiment_stats['neutral'],
-        sentiment_stats['negative']
+        sentiment_stats.get('positive', 0),
+        sentiment_stats.get('neutral', 0),
+        sentiment_stats.get('negative', 0)
     ]
     colors = ['#28a745', '#ffc107', '#dc3545']
     
@@ -108,7 +106,6 @@ def plot_sentiment_pie_plotly(sentiment_stats):
         showlegend=True,
         height=400
     )
-    
     return fig
 
 
@@ -138,244 +135,152 @@ def main():
     """Main Streamlit application"""
     
     # Header
-    st.markdown('<div class="main-header">🛡️ BrandShield Lite</div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #666;">Advanced Brand Sentiment & Crisis Detection System</p>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🛡️ BrandShield Deep Research Agent</div>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #666;">Autonomous Deep Research & Crisis Response Orchestration</p>', unsafe_allow_html=True)
     
     # Sidebar
     with st.sidebar:
         st.image("https://img.icons8.com/fluency/96/000000/security-shield-green.png", width=80)
         st.title("Configuration")
         
-        # Brand name input
-        brand_name = st.text_input(
-            "🏢 Brand Name",
-            value="Tesla",
-            help="Enter the brand name you want to analyze"
-        )
-        
-        # Chart type selection
-        chart_type = st.radio(
-            "📊 Chart Type",
-            options=["Plotly (Interactive)", "Matplotlib (Static)"],
-            index=0
-        )
+        brand_name = st.text_input("🏢 Brand Name", value="Tesla")
+        chart_type = st.radio("📊 Chart Type", ["Plotly (Interactive)", "Matplotlib (Static)"])
         
         st.markdown("---")
-        
-        # API Status
         st.subheader("🔑 API Status")
-        exa_key = os.getenv("EXA_API_KEY")
-        hf_key = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-        
-        st.write("**Exa API:**", "✅ Configured" if exa_key else "⚠️ Not configured (using mock data)")
-        st.write("**HuggingFace:**", "✅ Configured" if hf_key else "⚠️ Not configured")
-        
+        st.write("**Exa API:**", "✅ Configured" if os.getenv("EXA_API_KEY") else "⚠️ Mock Data")
+        st.write("**HuggingFace:**", "✅ Configured" if os.getenv("HUGGINGFACEHUB_API_TOKEN") else "⚠️ Missing")
         st.markdown("---")
         
-        # Analyze button
-        analyze_button = st.button("🚀 Run Analysis", type="primary", use_container_width=True)
+        analyze_button = st.button("🚀 Start Deep Research", type="primary", use_container_width=True)
+        reset_button = st.button("🔄 Reset", use_container_width=True)
         
-        st.markdown("---")
-        st.caption("💡 Powered by LangGraph & Streamlit")
-    
-    # Main content area
+    if reset_button:
+        st.session_state.clear()
+        st.rerun()
+
+    # Session State Init
+    if "analysis_stage" not in st.session_state:
+        st.session_state.analysis_stage = "init"
+    if "current_state" not in st.session_state:
+        st.session_state.current_state = {}
+
+    # Trigger Analysis
     if analyze_button:
         if not brand_name.strip():
-            st.error("⚠️ Please enter a brand name to analyze")
+            st.error("⚠️ Enter a brand name")
             return
-        
-        # Progress indicator
-        with st.spinner(f"🔍 Analyzing {brand_name}... This may take a minute..."):
+        st.session_state.analysis_stage = "running_phase1"
+        st.session_state.brand_name = brand_name
+        st.session_state.current_state = {"topic": brand_name, "raw_content": [], "filtered_content": [], 
+                                         "sentiment_stats": {}, "emotion_analysis": {}, "social_media_replies": [],
+                                         "risk_metrics": {}, "rag_findings_structured": []}
+        st.rerun()
+
+    # --- PHASE 1: RESEARCH & DRAFTS ---
+    if st.session_state.analysis_stage == "running_phase1":
+        with st.status("🕵️‍♂️ Deep Research Agent Running...", expanded=True) as status:
+            st.write("🗺️ Planning Agent: Generating research questions...")
+            st.write("🔍 Search Agent: Executing multi-step deep search...")
+            st.write("🧠 RAG Agent: Analyzing semantic patterns...")
+            st.write("💬 Social Media Agent: Drafting replies...")
+            
             try:
-                # Run the analysis
-                result: AgentState = run_analysis(brand_name)
-                
-                # Store result in session state
-                st.session_state['result'] = result
-                st.session_state['brand_name'] = brand_name
-                
-                st.success(f"✅ Analysis complete for **{brand_name}**!")
-                
+                app1 = create_phase1_graph()
+                result = app1.invoke(st.session_state.current_state)
+                st.session_state.current_state = result
+                st.session_state.analysis_stage = "phase1_done"
+                status.update(label="✅ Research Phase Complete!", state="complete", expanded=False)
+                st.rerun()
             except Exception as e:
-                st.error(f"❌ Error during analysis: {str(e)}")
-                st.exception(e)
-                return
-    
-    # Display results if available
-    if 'result' in st.session_state:
-        result = st.session_state['result']
-        brand_name = st.session_state['brand_name']
-        sentiment_stats = result['sentiment_stats']
+                st.error(f"Error in Phase 1: {e}")
+                st.stop()
+
+    # --- HITL: REVIEW REPLIES ---
+    if st.session_state.analysis_stage == "phase1_done":
+        result = st.session_state.current_state
+        
+        st.info("✅ **Human-in-the-Loop Required**: Please review the AI's draft social media replies before final strategy generation.")
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
+             st.markdown("### 🔍 Research Summary")
+             st.markdown(f"**Risk Score:** {result.get('risk_metrics', {}).get('score', 0)}/100")
+             st.markdown(f"**Dominant Emotion:** {result.get('emotion_analysis', {}).get('dominant_emotion', 'Unknown')}")
+        
+        with col2:
+             st.markdown("### 📋 Plan")
+             st.write(f"Research Plan: {result.get('research_plan', [])}")
+
+        st.markdown("---")
+        st.subheader("💬 Review Draft Replies")
+        
+        replies = result.get('social_media_replies', [])
+        if not replies:
+            st.warning("No negative issues found requiring replies.")
+        
+        updated_replies = []
+        with st.form("hitl_form"):
+            for i, rep in enumerate(replies):
+                st.markdown(f"**{i+1}. Source:** {rep['source']}")
+                st.markdown(f"> *\"{rep['content']}\"*")
+                new_draft = st.text_area("Draft Reply:", value=rep['draft_reply'], key=f"d_{i}", height=100)
+                updated_replies.append({**rep, "draft_reply": new_draft, "status": "approved"})
+                st.divider()
+            
+            submit_review = st.form_submit_button("✅ Approve Replies & Generate Strategy", type="primary")
+        
+        if submit_review:
+            st.session_state.current_state['social_media_replies'] = updated_replies
+            st.session_state.analysis_stage = "running_phase2"
+            st.rerun()
+            
+    # --- PHASE 2: STRATEGY & REPORT ---
+    if st.session_state.analysis_stage == "running_phase2":
+        with st.status("🧠 Strategy Agent Running...", expanded=True) as status:
+            st.write("📊 Strategy Agent: Synthesizing full report...")
+            st.write("📝 Critic Agent: Reviewing and refining...")
+            
+            try:
+                app2 = create_phase2_graph()
+                result = app2.invoke(st.session_state.current_state)
+                st.session_state.current_state = result
+                st.session_state.analysis_stage = "complete"
+                status.update(label="✅ Strategy Generation Complete!", state="complete", expanded=False)
+                st.rerun()
+            except Exception as e:
+                 st.error(f"Error in Phase 2: {e}")
+                 st.stop()
+
+    # --- FINAL DISPLAY (War Room) ---
+    if st.session_state.analysis_stage == "complete":
+        result = st.session_state.current_state
+        brand_name = st.session_state.get('brand_name', 'Unknown')
+        sentiment_stats = result.get('sentiment_stats', {})
         
         st.markdown("---")
-        
-        # --- NEW: WAR ROOM DASHBOARD ---
         st.markdown("## 🚨 Crisis Command Center")
         
         risk_metrics = result.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
-        
         col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.plotly_chart(plot_risk_gauge(risk_metrics["score"]), use_container_width=True)
-            
-        with col2:
-            st.metric(
-                label="Sentiment Velocity", 
-                value=f"{risk_metrics['velocity']}%", 
-                delta=f"{risk_metrics['velocity']}%",
-                delta_color="inverse"
-            )
-            st.info("Rate of negative sentiment change (Last 1hr vs 4hrs)")
-            
-        with col3:
-            st.metric(label="Risk Level", value=risk_metrics["level"])
-            if risk_metrics["level"] in ["HIGH", "CRITICAL"]:
-                st.error("⚠️ CRITICAL ALERT: Immediate Action Required")
-            else:
-                st.success("✅ Status: Stable")
-        
-        st.markdown("---")
-        
-        # Sentiment Metrics
-        st.subheader(f"📊 Sentiment Analysis: {brand_name}")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric(
-                label="Overall Sentiment",
-                value=sentiment_stats['overall_sentiment'],
-                delta=None
-            )
-        
-        with col2:
-            st.metric(
-                label="✅ Positive",
-                value=sentiment_stats['positive'],
-                delta=f"{sentiment_stats['positive']/sentiment_stats['total']*100:.1f}%"
-            )
-        
-        with col3:
-            st.metric(
-                label="⚠️ Neutral",
-                value=sentiment_stats['neutral'],
-                delta=f"{sentiment_stats['neutral']/sentiment_stats['total']*100:.1f}%"
-            )
-        
-        with col4:
-            st.metric(
-                label="❌ Negative",
-                value=sentiment_stats['negative'],
-                delta=f"{sentiment_stats['negative']/sentiment_stats['total']*100:.1f}%"
-            )
-        
-        # Sentiment scores
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.metric("VADER Compound Score", f"{sentiment_stats['vader_compound']:.3f}")
-        with col_b:
-            st.metric("TextBlob Polarity", f"{sentiment_stats['textblob_polarity']:.3f}")
+        with col1: st.plotly_chart(plot_risk_gauge(risk_metrics["score"]), use_container_width=True)
+        with col2: st.metric(label="Sentiment Velocity", value=f"{risk_metrics['velocity']}%")
+        with col3: st.metric(label="Risk Level", value=risk_metrics["level"])
         
         st.markdown("---")
         
         # Sentiment Chart
-        st.subheader("📈 Sentiment Distribution Visualization")
-        
+        st.subheader("📈 Sentiment Distribution")
         if "Plotly" in chart_type:
-            fig = plot_sentiment_pie_plotly(sentiment_stats)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(plot_sentiment_pie_plotly(sentiment_stats), use_container_width=True)
         else:
-            fig = plot_sentiment_pie_matplotlib(sentiment_stats)
-            st.pyplot(fig)
-        
-        st.markdown("---")
-        
-        # RAG Findings (Structured)
-        st.subheader("🧠 AI Semantic Analysis")
-        
-        rag_structured = result.get('rag_findings_structured', [])
-        if rag_structured:
-            for category_data in rag_structured:
-                with st.expander(f"{category_data['category']} ({len(category_data['items'])} matches)", expanded=True):
-                    st.caption(f"Relevance: {category_data['relevance']}")
-                    
-                    # Grid layout for findings
-                    cols = st.columns(3)
-                    for idx, item in enumerate(category_data['items']):
-                        with cols[idx % 3]:
-                            st.markdown(f"""
-                            <div class="result-card">
-                                <div style="font-weight:bold; margin-bottom:5px;">{item['sentiment_display']}</div>
-                                <div style="font-size:0.9em; margin-bottom:5px; height: 40px; overflow: hidden; text-overflow: ellipsis;">
-                                    <a href="{item['url']}" target="_blank" style="text-decoration: none; color: #0366d6;">{item['source']}</a>
-                                </div>
-                                <div style="font-size:0.8em; color:#666; margin-bottom:10px;">🕒 {item['time_ago']}</div>
-                                <div style="font-size:0.85em; font-style:italic; color: #444; background: #f9f9f9; padding: 8px; border-radius: 4px;">
-                                    "{item['context'][:120]}..."
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-        else:
-            st.info("✅ No critical issues found in semantic analysis.")
-
-        st.markdown("---")
-
-        # Raw Data Expander (Cleaner)
-        with st.expander("🔍 View All Search Results", expanded=False):
-            st.subheader("Search Results (Past 2 Days)")
+            st.pyplot(plot_sentiment_pie_matplotlib(sentiment_stats))
             
-            if 'filtered_content' in result and result['filtered_content']:
-                for idx, item in enumerate(result['filtered_content'], 1):
-                    with st.container():
-                        col1, col2 = st.columns([3, 1])
-                        with col1:
-                            st.markdown(f"**{idx}. [{item['title']}]({item['url']})**")
-                        with col2:
-                            is_recent = item.get('is_recent', False)
-                            time_badge = "🔥 BREAKING" if is_recent else "📅"
-                            st.markdown(f"{time_badge} **{item.get('time_ago', 'Unknown')}**")
-                        
-                        st.markdown(f"_{item['text'][:200]}..._")
-                        st.divider()
-            else:
-                st.info("No filtered content available")
-        
         st.markdown("---")
-        
-        # Strategic Report
         st.subheader("📋 AI Strategic Report")
         st.markdown(result['final_report'])
         
-        # Download button
-        st.download_button(
-            label="📥 Download Report",
-            data=result['final_report'],
-            file_name=f"brandshield_report_{brand_name}_{st.session_state.get('timestamp', 'report')}.md",
-            mime="text/markdown"
-        )
-    
-    else:
-        # Welcome message
-        st.info("👈 Enter a brand name in the sidebar and click **Run Analysis** to get started!")
-        
-        # Feature overview
-        st.markdown("---")
-        st.subheader("✨ Features")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("### 🔍 Search Agent")
-            st.write("Fetches latest web mentions using Exa API or mock data")
-        
-        with col2:
-            st.markdown("### 🧠 RAG Agent")
-            st.write("Semantic search with ChromaDB & HuggingFace embeddings")
-        
-        with col3:
-            st.markdown("### 📊 Strategy Agent")
-            st.write("Generates CEO-level strategic reports with actionable insights")
+        st.download_button("📥 Download Report", result['final_report'], "report.md")
 
 
 if __name__ == "__main__":

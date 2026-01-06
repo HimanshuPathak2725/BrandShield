@@ -38,3 +38,6 @@ class AgentState(TypedDict):
     final_report: str
     human_approved: bool
     revision_count: int
+    research_plan: List[str]
+    social_media_replies: List[Dict[str, Any]]
+    human_feedback: str

@@ -5,13 +5,13 @@ Handles connection to Hugging Face Inference Endpoints.
 import os
 from langchain_huggingface import HuggingFaceEndpoint
 
-def get_llm(repo_id="mistralai/Mistral-7B-Instruct-v0.2", temperature=0.7, max_new_tokens=2048):
+def get_llm(repo_id="HuggingFaceH4/zephyr-7b-beta", temperature=0.7, max_new_tokens=2048):
     """
     Get a Hugging Face LLM instance.
     
     Args:
         repo_id: The Hugging Face model ID to use. 
-                 Defaults to 'mistralai/Mistral-7B-Instruct-v0.2' (reliable open source instruction model).
+                 Defaults to 'HuggingFaceH4/zephyr-7b-beta' (reliable open source instruction model).
         temperature: Creativity of the model (0.0 to 1.0).
         max_new_tokens: Maximum number of tokens to generate.
         

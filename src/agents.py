@@ -39,19 +39,61 @@ from langchain.prompts import PromptTemplate
 
 
 # ============================================================================
+# PLANNING AGENT
+# ============================================================================
+
+def planning_agent(state: AgentState) -> AgentState:
+    """
+    Planning Agent: Generates a deep research plan based on the topic.
+    """
+    print(f"🗺️  Planning Agent: Generating research plan for '{state['topic']}'...")
+    topic = state['topic']
+    
+    try:
+        # Generate 3 distinct queries
+        llm = get_llm(temperature=0.7)
+        prompt = (f"You are a master researcher. Generate 3 specific, distinct search queries to investigate the brand '{topic}'.\n"
+                  f"1. Focus on recent customer sentiment/complaints.\n"
+                  f"2. Focus on specific technical issues or product flaws.\n"
+                  f"3. Focus on comparisons with major competitors.\n"
+                  f"Return ONLY the 3 queries separated by newlines. No numbering or prefixes.")
+        
+        response = llm.invoke(prompt)
+        queries = [q.strip().replace('"','').replace("'", "") for q in response.split('\n') if q.strip()]
+        if len(queries) < 3:
+            queries = [
+                f"{topic} customer reviews complaints reddit",
+                f"{topic} technical issues bugs down",
+                f"{topic} vs competitors features"
+            ]
+    except Exception as e:
+        print(f"⚠️ Planning Agent failed: {e}. Using defaults.")
+        queries = [
+            f"{topic} customer reviews complaints",
+            f"{topic} problems bugs",
+            f"{topic} alternatives"
+        ]
+        
+    state["research_plan"] = queries[:3]
+    print(f"✅ Research Plan: {state['research_plan']}")
+    return state
+
+
+# ============================================================================
 # SEARCH AGENT
 # ============================================================================
 
 def search_agent(state: AgentState) -> AgentState:
     """
-    Search Agent: Fetches the latest web mentions about the topic.
-    
-    Uses exa-py if available, otherwise uses a mock search function.
+    Search Agent: Fetches web mentions using the Research Plan.
     """
     topic = state["topic"]
-    print(f"🔍 Search Agent: Searching for mentions of '{topic}'...")
+    queries = state.get("research_plan", [f"{topic} brand mention reviews"])
+    
+    print(f"🔍 Search Agent: Executing Deep Research Plan ({len(queries)} queries)...")
     
     raw_content = []
+    seen_urls = set()
     
     # Try using Exa API
     if EXA_AVAILABLE and os.getenv("EXA_API_KEY"):
@@ -61,42 +103,46 @@ def search_agent(state: AgentState) -> AgentState:
             # Get current time and 2 days ago
             current_time = datetime.now(pytz.UTC)
             two_days_ago = current_time - timedelta(days=2)
-            
-            # Format dates for Exa API (ISO format)
             start_date = two_days_ago.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             
-            results = exa.search_and_contents(
-                query=f"{topic} brand mention reviews sentiment",
-                num_results=15,
-                text=True,
-                start_published_date=start_date,
-                use_autoprompt=True
-            )
-            
-            for result in results.results:
-                # Parse published date
-                pub_date = getattr(result, 'published_date', None)
-                if pub_date:
-                    try:
-                        # Parse ISO format date
-                        if isinstance(pub_date, str):
-                            pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
-                        else:
-                            pub_datetime = pub_date
-                    except:
-                        pub_datetime = current_time
-                else:
-                    pub_datetime = current_time
+            for query in queries:
+                print(f"   running query: {query}")
+                results = exa.search_and_contents(
+                    query=query,
+                    num_results=5, # 5 per query * 3 queries = 15 total
+                    text=True,
+                    start_published_date=start_date,
+                    use_autoprompt=True
+                )
                 
-                raw_content.append({
-                    "title": result.title,
-                    "url": result.url,
-                    "text": result.text[:1500] if result.text else "",
-                    "published_date": pub_datetime.isoformat(),
-                    "published_timestamp": pub_datetime.timestamp()
-                })
+                for result in results.results:
+                    if result.url in seen_urls:
+                        continue
+                        
+                    seen_urls.add(result.url)
+                    
+                    # Parse published date
+                    pub_date = getattr(result, 'published_date', None)
+                    if pub_date:
+                        try:
+                            if isinstance(pub_date, str):
+                                pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
+                            else:
+                                pub_datetime = pub_date
+                        except:
+                            pub_datetime = current_time
+                    else:
+                        pub_datetime = current_time
+                    
+                    raw_content.append({
+                        "title": result.title,
+                        "url": result.url,
+                        "text": result.text[:1500] if result.text else "",
+                        "published_date": pub_datetime.isoformat(),
+                        "published_timestamp": pub_datetime.timestamp()
+                    })
             
-            print(f"✅ Found {len(raw_content)} results via Exa API (past 2 days)")
+            print(f"✅ Found {len(raw_content)} unique results via Exa API")
             
         except Exception as e:
             print(f"⚠️ Exa API error: {e}. Falling back to mock data...")
@@ -636,11 +682,73 @@ def rag_agent(state: AgentState) -> AgentState:
 # STRATEGY AGENT
 # ============================================================================
 
+# ============================================================================
+# SOCIAL MEDIA AGENT
+# ============================================================================
+
+def social_media_agent(state: AgentState) -> AgentState:
+    """
+    Social Media Agent: Drafts replies to negative feedback.
+    """
+    print("💬 Social Media Agent: Analyzing content for reply opportunities...")
+    # Use filtered content as the source
+    content = state.get("filtered_content", [])
+    topic = state["topic"]
+    
+    replies = []
+    
+    # Filter for negative items (simple keyword match for speed + fallback)
+    negative_items = []
+    for item in content:
+        text = item.get('text', '').lower()
+        if any(w in text for w in ["frustrat", "disappoint", "bad", "fail", "bug", "issue", "terrible", "worst"]):
+            negative_items.append(item)
+    
+    # Sort by recency and take top 5
+    negative_items = sorted(negative_items, key=lambda x: x.get('published_timestamp', 0), reverse=True)[:5]
+     
+    try:
+        llm = get_llm(temperature=0.7)
+    except:
+        llm = None
+        
+    print(f"   Found {len(negative_items)} negative items to address.")
+
+    for item in negative_items:
+        draft = "We're sorry to hear this. Please contact support."
+        if llm:
+            try:
+                # Truncate text for prompt
+                context_text = item.get('text', '')[:300]
+                prompt_text = (f"You are a social media manager for '{topic}'.\n"
+                          f"Draft a polite, professional, and empathetic social media reply (max 280 chars) "
+                          f"to this customer observation.\n"
+                          f"Observation: \"{context_text}...\"\n"
+                          f"Reply:")
+                draft = llm.invoke(prompt_text).strip().replace('"', '')
+            except Exception as e:
+                print(f"Error generating reply: {e}")
+        
+        replies.append({
+            "id": item.get('url', str(len(replies))),
+            "content": item.get('text', '')[:200] + "...",
+            "draft_reply": draft,
+            "source": item.get('title', 'Unknown'),
+            "status": "draft"
+        })
+        
+    state["social_media_replies"] = replies
+    print(f"✅ Drafted {len(replies)} replies.")
+    return state
+
+
+# ============================================================================
+# STRATEGY AGENT
+# ============================================================================
+
 def strategy_agent(state: AgentState) -> AgentState:
     """
     Strategy Agent: Creates a detailed CEO-level strategic report DRAFT.
-    
-    Uses an LLM to analyze findings and provide Immediate, Short-term, and Long-term actions.
     """
     print("📊 Strategy Agent: Generating strategic report draft using LLM...")
     
@@ -650,14 +758,23 @@ def strategy_agent(state: AgentState) -> AgentState:
     emotion_analysis = state.get("emotion_analysis", {})
     revision_count = state.get("revision_count", 0)
     critic_feedback = state.get("critic_feedback", "")
+    social_media_replies = state.get("social_media_replies", [])
+    
+    # Prepare Social Media Summary
+    sm_summary = ""
+    if social_media_replies:
+        sm_summary = "\n### 💬 PROPOSED SOCIAL MEDIA ACTIONS\n"
+        for reply in social_media_replies:
+             sm_summary += f"- **Target:** {reply['source']}\n"
+             sm_summary += f"  - *Issue:* {reply['content']}\n"
+             sm_summary += f"  - *Draft Reply:* {reply['draft_reply']}\n"
     
     # Initialize LLM
     try:
         llm = get_llm()
     except Exception as e:
         print(f"⚠️ Failed to initialize LLM: {e}. Falling back to template.")
-        # Fallback logic could go here, but for now we'll just print error
-        # In a real app, we might want a robust fallback
+        return state
     
     # Construct the prompt
     prompt_template = """
@@ -666,41 +783,37 @@ Your job is to write a high-level strategic report for the CEO based on the foll
 
 ### 📊 DATA INPUTS
 - **Risk Score:** {risk_score}/100 ({risk_level})
-- **Sentiment Velocity:** {velocity}% (Rate of change in negative sentiment)
+- **Sentiment Velocity:** {velocity}%
 - **Overall Sentiment:** {overall_sentiment}
-- **Sentiment Stats:** Positive: {positive}, Negative: {negative}, Neutral: {neutral}
 - **Dominant Emotion:** {dominant_emotion} (Viral Risk: {viral_risk})
-- **RAG Analysis Findings:** 
+
+### 🧠 RESEARCH FINDINGS
 {rag_findings}
 
-### 📝 CRITIC FEEDBACK (If any, you MUST address this):
+### 💬 SOCIAL MEDIA ENGAGEMENT PLAN
+{sm_summary}
+
+### 📝 CRITIC FEEDBACK (If any):
 {critic_feedback}
 
 ### 🎯 INSTRUCTIONS
 Write a professional, actionable strategic report in Markdown format.
-The report MUST include the following sections:
+Include:
+1. **EXECUTIVE SUMMARY**
+2. **RISK ASSESSMENT**
+3. **STRATEGIC RECOMMENDATIONS**
+4. **SOCIAL MEDIA REVIEW** (Evaluate the proposed replies briefly)
+5. **CRISIS CHECKLIST**
 
-1. **EXECUTIVE SUMMARY**: Brief overview of the brand's current health.
-2. **RISK ASSESSMENT**: Analyze the Risk Score and Velocity.
-3. **STRATEGIC RECOMMENDATIONS**:
-   - **Option 1: Empathetic Response**: (If fault is likely) "We are aware..."
-   - **Option 2: Precautionary Response**: (If safety risk) "Stop using..."
-   - **Option 3: Factual/Defensive Response**: (If misinformation) "Our data shows..."
-4. **CRISIS CHECKLIST**:
-   - [ ] Action 1
-   - [ ] Action 2
-   - [ ] Action 3
-
-**Tone:** Professional, objective, and decisive. Avoid fluff.
-**Format:** Use Markdown headers (##), bullet points, and bold text.
+**Tone:** Professional, objective, and decisive.
 
 ### GENERATED REPORT:
 """
     
     prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["topic", "risk_score", "risk_level", "velocity", "overall_sentiment", "positive", "negative", "neutral", 
-                         "dominant_emotion", "viral_risk", "rag_findings", "critic_feedback"]
+        input_variables=["topic", "risk_score", "risk_level", "velocity", "overall_sentiment", 
+                         "dominant_emotion", "viral_risk", "rag_findings", "sm_summary", "critic_feedback"]
     )
     
     risk_metrics = state.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
@@ -711,32 +824,25 @@ The report MUST include the following sections:
         risk_level=risk_metrics["level"],
         velocity=risk_metrics["velocity"],
         overall_sentiment=sentiment_stats.get('overall_sentiment', 'Unknown'),
-        positive=sentiment_stats.get('positive', 0),
-        negative=sentiment_stats.get('negative', 0),
-        neutral=sentiment_stats.get('neutral', 0),
         dominant_emotion=emotion_analysis.get('dominant_emotion', 'Unknown'),
         viral_risk=emotion_analysis.get('viral_risk', 'Unknown'),
         rag_findings=rag_findings,
-        critic_feedback=critic_feedback if critic_feedback else "None. This is the first draft."
+        sm_summary=sm_summary,
+        critic_feedback=critic_feedback if critic_feedback else "None."
     )
-    
-
     
     try:
         print("   🧠 Invoking LLM for strategy generation...")
         report = llm.invoke(formatted_prompt)
-        
-        # Add metadata footer
-        report += "\n\n---\n\n*This report was generated by BrandShield_Lite Elite AI (Zephyr-7b)*"
-        
+        report += "\n\n---\n\n*Generated by BrandShield Deep Research Agent*"
     except Exception as e:
         print(f"   ❌ LLM Generation Failed: {e}")
-        report = f"ERROR: Could not generate report due to LLM failure.\n\nDetails: {e}"
+        report = f"ERROR: Could not generate report.\n\nDetails: {e}"
 
-    # Store as draft for Critic review
     state["draft_report"] = report
     state["revision_count"] = revision_count
+    state["final_report"] = report 
     
-    print("✅ Strategic report draft complete (pending Critic review)")
+    print("✅ Strategic report draft complete")
     
     return state
