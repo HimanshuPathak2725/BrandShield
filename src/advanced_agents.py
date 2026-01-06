@@ -15,7 +15,7 @@ except ImportError:
     TRANSFORMERS_AVAILABLE = False
 
 from src.state import AgentState
-from src.llm_utils import get_llm
+from src.llm_utils import get_llm, get_agent_llm
 from langchain.prompts import PromptTemplate
 
 
@@ -254,7 +254,7 @@ def critic_agent(state: AgentState) -> AgentState:
     
     # Initialize LLM
     try:
-        llm = get_llm()
+        llm = get_agent_llm("critic", temperature=0.2)
     except Exception as e:
         print(f"⚠️ Failed to initialize LLM: {e}. Falling back to manual approval.")
         state["critic_approved"] = True
@@ -310,7 +310,9 @@ You must output your review in the following format:
     
     try:
         print("   🧠 Invoking LLM for critique...")
-        critique = llm.invoke(formatted_prompt)
+        response = llm.invoke(formatted_prompt)
+        # Handle both string and chat response formats
+        critique = response.content if hasattr(response, 'content') else str(response)
         
         # Parse decision
         if "DECISION: APPROVED" in critique or "DECISION: **APPROVED**" in critique:
