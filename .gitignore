@@ -43,11 +43,25 @@ env/
 .DS_Store
 Thumbs.db
 
-# ChromaDB
+# Database files (ChromaDB not used but keeping for future)
 chroma_db/
 *.chroma
+*.db
+*.sqlite
 
 # Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Streamlit cache
+.streamlit/
+
+# Model cache
+models/
+.cache/
 *.log
 
 # Streamlit

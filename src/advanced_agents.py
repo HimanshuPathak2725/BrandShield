@@ -1,18 +1,14 @@
 """
-Advanced agent implementations for BrandShield_Lite Elite.
-Contains Emotion Analyzer, CRAG Logic, and Critic Agent.
+Advanced agent implementations for BrandShield_Lite.
+Contains simplified Emotion Analyzer, CRAG Logic, and Critic Agent.
+Simplified for demo - removed heavy transformers dependency.
 """
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import numpy as np
 
-try:
-    from transformers import pipeline
-    TRANSFORMERS_AVAILABLE = True
-    # Initialize emotion classifier (SamLowe/roberta-base-go_emotions)
-    emotion_classifier = None  # Lazy loading
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
+# Use VADER for fast emotion analysis (no transformers needed)
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.state import AgentState
 from src.llm_utils import get_llm, get_agent_llm
@@ -20,167 +16,81 @@ from langchain.prompts import PromptTemplate
 
 
 # ============================================================================
-# EMOTION VELOCITY ANALYZER
+# SIMPLIFIED EMOTION ANALYZER (No Transformers)
 # ============================================================================
 
 def analyze_emotions(filtered_content: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Advanced emotion analysis using go_emotions model.
-    Tracks emotion velocity and identifies trend shifts.
+    Simplified emotion analysis using VADER only (fast & demo-ready).
+    Tracks basic emotions without heavy ML models.
     """
-    global emotion_classifier
-    
-    if not TRANSFORMERS_AVAILABLE:
-        return _fallback_emotion_analysis(filtered_content)
-    
-    try:
-        # Lazy load the model
-        if emotion_classifier is None:
-            print("   📥 Loading go_emotions model (first run only)...")
-            emotion_classifier = pipeline(
-                "text-classification",
-                model="SamLowe/roberta-base-go_emotions",
-                top_k=None,
-                device=-1  # CPU
-            )
-        
-        # Analyze emotions for each article
-        emotion_timeline = []
-        all_emotions = {
-            'anger': [], 'sadness': [], 'joy': [], 'fear': [], 
-            'surprise': [], 'disgust': [], 'neutral': []
-        }
-        
-        for item in filtered_content:
-            text = item['text'][:512]  # Truncate for model
-            results = emotion_classifier(text)[0]
-            
-            # Extract top emotions
-            emotions = {r['label']: r['score'] for r in results}
-            
-            # Track timeline
-            emotion_timeline.append({
-                'time': item.get('hours_ago', 0),
-                'emotions': emotions,
-                'title': item['title']
-            })
-            
-            # Aggregate emotions
-            for emotion in all_emotions.keys():
-                if emotion in emotions:
-                    all_emotions[emotion].append(emotions[emotion])
-        
-        # Calculate emotion velocity (trend)
-        velocity = _calculate_emotion_velocity(emotion_timeline)
-        
-        # Identify dominant emotion
-        avg_emotions = {k: np.mean(v) if v else 0 for k, v in all_emotions.items()}
-        dominant_emotion = max(avg_emotions, key=avg_emotions.get)
-        
-        # Check for dangerous trend (sadness -> anger)
-        danger_score = _calculate_danger_score(velocity, avg_emotions)
-        
-        return {
-            'dominant_emotion': dominant_emotion,
-            'emotion_scores': avg_emotions,
-            'emotion_timeline': emotion_timeline,
-            'velocity': velocity,
-            'danger_score': danger_score,
-            'trend_analysis': _interpret_trend(velocity, dominant_emotion),
-            'viral_risk': 'HIGH' if danger_score > 0.7 else 'MEDIUM' if danger_score > 0.4 else 'LOW'
-        }
-        
-    except Exception as e:
-        print(f"   ⚠️ Emotion analysis error: {e}")
-        return _fallback_emotion_analysis(filtered_content)
-
-
-def _fallback_emotion_analysis(filtered_content: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Fallback emotion analysis using VADER when transformers unavailable."""
-    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-    
     vader = SentimentIntensityAnalyzer()
-    emotions = {'negative': [], 'neutral': [], 'positive': []}
+    
+    # Analyze emotions for each article
+    emotions = {'anger': [], 'neutral': [], 'joy': []}
     
     for item in filtered_content:
-        scores = vader.polarity_scores(item['text'])
-        emotions['negative'].append(scores['neg'])
+        text = item.get('text', '')[:512]  # Truncate for speed
+        scores = vader.polarity_scores(text)
+        
+        # Map VADER scores to basic emotions
+        emotions['anger'].append(scores['neg'])
         emotions['neutral'].append(scores['neu'])
-        emotions['positive'].append(scores['pos'])
+        emotions['joy'].append(scores['pos'])
     
-    avg_neg = np.mean(emotions['negative']) if emotions['negative'] else 0
+    # Calculate averages
+    avg_anger = np.mean(emotions['anger']) if emotions['anger'] else 0
+    avg_neutral = np.mean(emotions['neutral']) if emotions['neutral'] else 0
+    avg_joy = np.mean(emotions['joy']) if emotions['joy'] else 0
+    
+    # Determine dominant emotion
+    emotion_map = {
+        'anger': avg_anger,
+        'neutral': avg_neutral,
+        'joy': avg_joy
+    }
+    dominant_emotion = max(emotion_map, key=emotion_map.get)
+    
+    # Calculate danger score based on anger levels
+    danger_score = avg_anger
+    
+    # Determine viral risk
+    viral_risk = 'HIGH' if danger_score > 0.7 else 'MEDIUM' if danger_score > 0.4 else 'LOW'
+    
+    # Simple trend analysis
+    trend_analysis = _interpret_trend(avg_anger, dominant_emotion)
     
     return {
-        'dominant_emotion': 'anger' if avg_neg > 0.5 else 'neutral',
+        'dominant_emotion': dominant_emotion,
         'emotion_scores': {
-            'anger': avg_neg,
-            'neutral': np.mean(emotions['neutral']) if emotions['neutral'] else 0,
-            'joy': np.mean(emotions['positive']) if emotions['positive'] else 0
+            'anger': avg_anger,
+            'neutral': avg_neutral,
+            'joy': avg_joy,
+            'sadness': avg_anger * 0.5,  # Approximate
+            'fear': 0,
+            'surprise': 0,
+            'disgust': avg_anger * 0.3
         },
-        'emotion_timeline': [],
+        'emotion_timeline': [],  # Simplified - not calculated
         'velocity': {'anger_velocity': 0, 'sadness_velocity': 0},
-        'danger_score': avg_neg,
-        'trend_analysis': 'Limited emotion analysis (transformers not available)',
-        'viral_risk': 'MEDIUM' if avg_neg > 0.5 else 'LOW'
+        'danger_score': danger_score,
+        'trend_analysis': trend_analysis,
+        'viral_risk': viral_risk
     }
 
 
-def _calculate_emotion_velocity(timeline: List[Dict]) -> Dict[str, float]:
-    """Calculate how quickly emotions are changing over time."""
-    if len(timeline) < 2:
-        return {'anger_velocity': 0, 'sadness_velocity': 0}
-    
-    # Sort by time (most recent first)
-    timeline = sorted(timeline, key=lambda x: x['time'])
-    
-    # Calculate velocity for key emotions
-    anger_trend = []
-    sadness_trend = []
-    
-    for entry in timeline:
-        emotions = entry['emotions']
-        anger_trend.append(emotions.get('anger', 0))
-        sadness_trend.append(emotions.get('sadness', 0))
-    
-    # Calculate slope (simple linear trend)
-    anger_velocity = (anger_trend[-1] - anger_trend[0]) if len(anger_trend) > 1 else 0
-    sadness_velocity = (sadness_trend[-1] - sadness_trend[0]) if len(sadness_trend) > 1 else 0
-    
-    return {
-        'anger_velocity': anger_velocity,
-        'sadness_velocity': sadness_velocity
-    }
-
-
-def _calculate_danger_score(velocity: Dict, emotions: Dict) -> float:
-    """
-    Calculate viral boycott risk.
-    High anger + increasing anger velocity = danger!
-    """
-    anger_level = emotions.get('anger', 0)
-    anger_vel = velocity.get('anger_velocity', 0)
-    
-    # Danger = high anger level + positive velocity (increasing)
-    danger_score = (anger_level * 0.7) + (max(0, anger_vel) * 0.3)
-    
-    return min(1.0, danger_score)
-
-
-def _interpret_trend(velocity: Dict, dominant_emotion: str) -> str:
+def _interpret_trend(anger_level: float, dominant_emotion: str) -> str:
     """Interpret the emotion trend for human readers."""
-    anger_vel = velocity.get('anger_velocity', 0)
-    sadness_vel = velocity.get('sadness_velocity', 0)
-    
-    if anger_vel > 0.2:
-        return "⚠️ CRITICAL: Anger is escalating rapidly. High viral boycott risk!"
-    elif anger_vel > 0.1:
-        return "🟠 WARNING: Anger levels are rising. Monitor closely."
-    elif sadness_vel > 0.2 and dominant_emotion == 'sadness':
-        return "🟡 WATCH: Sadness increasing. May shift to anger if unaddressed."
+    if anger_level > 0.7:
+        return "⚠️ CRITICAL: Very high anger levels detected. Immediate action required!"
+    elif anger_level > 0.5:
+        return "🟠 WARNING: Elevated anger levels. Monitor situation closely."
+    elif anger_level > 0.3:
+        return "🟡 CAUTION: Moderate negativity detected."
     elif dominant_emotion == 'anger':
-        return "🔴 ALERT: Anger is dominant emotion. Immediate response needed."
+        return "🔴 ALERT: Anger is dominant emotion."
     else:
-        return "🟢 STABLE: Emotions are stable or improving."
+        return "🟢 STABLE: Emotions are neutral or positive."
 
 
 # ============================================================================

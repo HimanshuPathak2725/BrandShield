@@ -1,26 +1,25 @@
-# Core Dependencies
+# Core Dependencies - LangGraph for orchestration
 langgraph==0.2.45
 langchain==0.3.7
 langchain-community==0.3.5
 langchain-huggingface==0.1.2
 
-# LLM & Embeddings
+# LLM & Embeddings (Simplified)
 huggingface-hub==0.26.2
 sentence-transformers==3.3.1
 
-# Vector Store & RAG
-chromadb==0.5.23
+# Google Gemini (Primary LLM - Fast & High Quality)
+google-generativeai>=0.3.0
+
+# Vector Store (FAISS only - removed chromadb)
 faiss-cpu==1.13.2
 
-# Search
+# Search API (Exa only - removed tavily)
 exa-py==1.1.3
 
-# Sentiment Analysis
+# Sentiment Analysis (VADER + TextBlob only)
 textblob==0.18.0.post0
 vaderSentiment==3.3.2
-# Optional: Advanced emotion analysis (install separately if needed)
-# transformers==4.47.1
-# torch==2.5.1
 numpy
 
 # Dashboard

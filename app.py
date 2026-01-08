@@ -20,39 +20,61 @@ load_dotenv()
 
 # Page configuration
 st.set_page_config(
-    page_title="BrandShield Deep Research",
+    page_title="BrandShield - AI Crisis Predictor",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS with Google-inspired colors
 st.markdown("""
 <style>
+    /* Google-inspired color palette */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #1f77b4;
+        background: linear-gradient(90deg, #4285F4, #DB4437, #F4B400, #0F9D58);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
         margin-bottom: 1rem;
     }
+    .stButton>button {
+        background-color: #4285F4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #357AE8;
+    }
     .metric-card {
-        background-color: #f0f2f6;
+        background-color: #f8f9fa;
         padding: 1rem;
-        border-radius: 0.5rem;
+        border-radius: 8px;
         margin: 0.5rem 0;
+        border-left: 4px solid #4285F4;
     }
     .result-card {
         background-color: #ffffff;
         padding: 1.5rem;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         margin-bottom: 1rem;
-        border: 1px solid #f0f0f0;
+        border: 1px solid #e0e0e0;
     }
-    .positive { color: #28a745; }
-    .negative { color: #dc3545; }
-    .neutral { color: #ffc107; }
+    .positive { color: #0F9D58; font-weight: bold; }
+    .negative { color: #DB4437; font-weight: bold; }
+    .neutral { color: #F4B400; font-weight: bold; }
+    .demo-badge {
+        background: linear-gradient(90deg, #4285F4, #DB4437);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -134,26 +156,54 @@ def plot_risk_gauge(score):
 def main():
     """Main Streamlit application"""
     
-    # Header
-    st.markdown('<div class="main-header">🛡️ BrandShield Deep Research Agent</div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #666;">Autonomous Deep Research & Crisis Response Orchestration</p>', unsafe_allow_html=True)
+    # Header with demo badge
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown('<div class="main-header">🛡️ BrandShield AI Crisis Predictor</div>', unsafe_allow_html=True)
+        st.markdown('<center><span class="demo-badge">🎓 Google Development Student Hackathon</span></center>', unsafe_allow_html=True)
+    
+    st.markdown('<p style="text-align: center; color: #666;">AI-Powered Brand Sentiment & Crisis Detection System</p>', unsafe_allow_html=True)
     
     # Sidebar
     with st.sidebar:
         st.image("https://img.icons8.com/fluency/96/000000/security-shield-green.png", width=80)
         st.title("Configuration")
         
-        brand_name = st.text_input("🏢 Brand Name", value="Tesla")
+        brand_name = st.text_input("🏢 Brand Name", value="Tesla", help="Enter the brand name to analyze")
         chart_type = st.radio("📊 Chart Type", ["Plotly (Interactive)", "Matplotlib (Static)"])
         
         st.markdown("---")
         st.subheader("🔑 API Status")
-        st.write("**Exa API:**", "✅ Configured" if os.getenv("EXA_API_KEY") else "⚠️ Mock Data")
-        st.write("**HuggingFace:**", "✅ Configured" if os.getenv("HUGGINGFACEHUB_API_TOKEN") else "⚠️ Missing")
-        st.markdown("---")
         
-        analyze_button = st.button("🚀 Start Deep Research", type="primary", use_container_width=True)
+        # Enhanced API status with better error messages
+        exa_configured = bool(os.getenv("EXA_API_KEY"))
+        gemini_configured = bool(os.getenv("GEMINI_API_KEY"))
+        hf_configured = bool(os.getenv("HUGGINGFACEHUB_API_TOKEN"))
+        
+        if exa_configured:
+            st.success("✅ Exa API: Connected")
+        else:
+            st.error("❌ Exa API: Not configured")
+            st.warning("⚠️ Get free API key at https://exa.ai/")
+        
+        if gemini_configured:
+            st.success("✅ Google Gemini: Connected 🚀")
+        else:
+            st.warning("⚠️ Gemini: Not configured (using HuggingFace)")
+            
+        if hf_configured:
+            st.info("ℹ️ HuggingFace: Fallback available")
+        else:
+            st.warning("⚠️ HuggingFace: Not configured")
+            
+        st.markdown("---")
+        st.info("💡 **Demo Mode**: Powered by Google Gemini AI + Exa Search")
+        
+        analyze_button = st.button("🚀 Start Analysis", type="primary", use_container_width=True)
         reset_button = st.button("🔄 Reset", use_container_width=True)
+        
+        st.markdown("---")
+        st.caption("Built with ❤️ using Streamlit, LangGraph & Google Technologies")
         
     if reset_button:
         st.session_state.clear()
@@ -168,8 +218,15 @@ def main():
     # Trigger Analysis
     if analyze_button:
         if not brand_name.strip():
-            st.error("⚠️ Enter a brand name")
+            st.error("⚠️ Please enter a brand name")
             return
+        
+        # Check for API key before starting
+        if not os.getenv("EXA_API_KEY"):
+            st.error("❌ Exa API key not configured! Please add EXA_API_KEY to your .env file.")
+            st.info("Get a free API key at: https://exa.ai/")
+            st.stop()
+            
         st.session_state.analysis_stage = "running_phase1"
         st.session_state.brand_name = brand_name
         st.session_state.current_state = {"topic": brand_name, "raw_content": [], "filtered_content": [], 
@@ -179,11 +236,12 @@ def main():
 
     # --- PHASE 1: RESEARCH & DRAFTS ---
     if st.session_state.analysis_stage == "running_phase1":
-        with st.status("🕵️‍♂️ Deep Research Agent Running...", expanded=True) as status:
-            st.write("🗺️ Planning Agent: Generating research questions...")
-            st.write("🔍 Search Agent: Executing multi-step deep search...")
-            st.write("🧠 RAG Agent: Analyzing semantic patterns...")
-            st.write("💬 Social Media Agent: Drafting replies...")
+        with st.status("🕵️‍♂️ AI Agent Orchestration in Progress...", expanded=True) as status:
+            st.write("🗺️ Planning Agent: Generating research strategy...")
+            st.write("🔍 Search Agent: Executing deep web search...")
+            st.write("⚖️ Evaluator Agent: Filtering time-sensitive data...")
+            st.write("🧠 RAG Agent: Performing semantic analysis...")
+            st.write("💬 Social Media Agent: Drafting response strategies...")
             
             try:
                 app1 = create_phase1_graph()
@@ -193,7 +251,8 @@ def main():
                 status.update(label="✅ Research Phase Complete!", state="complete", expanded=False)
                 st.rerun()
             except Exception as e:
-                st.error(f"Error in Phase 1: {e}")
+                st.error(f"❌ Error in Analysis Phase 1: {str(e)}")
+                st.error("Please check your API keys and internet connection.")
                 st.stop()
 
     # --- HITL: REVIEW REPLIES ---
@@ -278,9 +337,16 @@ def main():
             
         st.markdown("---")
         st.subheader("📋 AI Strategic Report")
-        st.markdown(result['final_report'])
         
-        st.download_button("📥 Download Report", result['final_report'], "report.md")
+        # Get final report with fallback
+        final_report = result.get('final_report') or result.get('draft_report') or "Report generation failed. Please check API configuration."
+        
+        if "ERROR" in final_report or "failed" in final_report.lower():
+            st.error("⚠️ Report generation encountered an issue. Please check your API keys.")
+        
+        st.markdown(final_report)
+        
+        st.download_button("📥 Download Report", final_report, "brandshield_report.md")
 
 
 if __name__ == "__main__":

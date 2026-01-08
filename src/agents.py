@@ -11,14 +11,6 @@ import pytz
 from textblob import TextBlob
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# Advanced Emotion Analysis
-try:
-    from transformers import pipeline
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
-    print("⚠️ Transformers not available. Emotion analysis will be limited.")
-
 # LangChain & RAG
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -31,6 +23,7 @@ try:
     EXA_AVAILABLE = True
 except ImportError:
     EXA_AVAILABLE = False
+    print("⚠️ Exa API not installed. Run: pip install exa-py")
 
 from src.state import AgentState
 from src.advanced_agents import analyze_emotions, check_rag_relevance, refine_search_query
@@ -88,6 +81,7 @@ def planning_agent(state: AgentState) -> AgentState:
 def search_agent(state: AgentState) -> AgentState:
     """
     Search Agent: Fetches web mentions using the Research Plan.
+    Uses Exa API ONLY - simplified for demo.
     """
     topic = state["topic"]
     queries = state.get("research_plan", [f"{topic} brand mention reviews"])
@@ -96,22 +90,20 @@ def search_agent(state: AgentState) -> AgentState:
     
     raw_content = []
     seen_urls = set()
+    current_time = datetime.now(pytz.UTC)
+    two_days_ago = current_time - timedelta(days=2)
     
-    # Try using Exa API
+    # Use Exa API
     if EXA_AVAILABLE and os.getenv("EXA_API_KEY"):
         try:
             exa = Exa(api_key=os.getenv("EXA_API_KEY"))
-            
-            # Get current time and 2 days ago
-            current_time = datetime.now(pytz.UTC)
-            two_days_ago = current_time - timedelta(days=2)
             start_date = two_days_ago.strftime("%Y-%m-%dT%H:%M:%S.000Z")
             
             for query in queries:
-                print(f"   running query: {query}")
+                print(f"   🔎 Exa query: {query}")
                 results = exa.search_and_contents(
                     query=query,
-                    num_results=5, # 5 per query * 3 queries = 15 total
+                    num_results=5,
                     text=True,
                     start_published_date=start_date,
                     use_autoprompt=True
@@ -120,17 +112,12 @@ def search_agent(state: AgentState) -> AgentState:
                 for result in results.results:
                     if result.url in seen_urls:
                         continue
-                        
                     seen_urls.add(result.url)
                     
-                    # Parse published date
                     pub_date = getattr(result, 'published_date', None)
                     if pub_date:
                         try:
-                            if isinstance(pub_date, str):
-                                pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
-                            else:
-                                pub_datetime = pub_date
+                            pub_datetime = datetime.fromisoformat(pub_date.replace('Z', '+00:00')) if isinstance(pub_date, str) else pub_date
                         except:
                             pub_datetime = current_time
                     else:
@@ -145,105 +132,22 @@ def search_agent(state: AgentState) -> AgentState:
                     })
             
             print(f"✅ Found {len(raw_content)} unique results via Exa API")
+            state["raw_content"] = raw_content
+            return state
             
         except Exception as e:
-            print(f"⚠️ Exa API error: {e}. Falling back to mock data...")
-            raw_content = _get_mock_search_results(topic)
-    else:
-        print("⚠️ Exa API not available. Using mock search results...")
-        raw_content = _get_mock_search_results(topic)
+            print(f"❌ Exa API error: {e}")
     
-    state["raw_content"] = raw_content
+    # No API available - return error
+    print("❌ ERROR: Exa API not available!")
+    print("   Please configure EXA_API_KEY in .env file")
+    print("   - Get Exa API key: https://exa.ai/")
+    
+    state["raw_content"] = []
     return state
 
 
-def _get_mock_search_results(topic: str) -> List[Dict[str, Any]]:
-    """Mock search results for testing when Exa API is not available."""
-    current_time = datetime.now(pytz.UTC)
-    
-    # Generate timestamps within past 2 days
-    timestamps = [
-        current_time - timedelta(hours=2),   # 2 hours ago
-        current_time - timedelta(hours=8),   # 8 hours ago
-        current_time - timedelta(hours=18),  # 18 hours ago
-        current_time - timedelta(days=1),    # 1 day ago
-        current_time - timedelta(hours=30),  # 1.25 days ago
-        current_time - timedelta(hours=36),  # 1.5 days ago
-        current_time - timedelta(hours=42),  # 1.75 days ago
-        current_time - timedelta(hours=47),  # ~2 days ago
-    ]
-    
-    return [
-        {
-            "title": f"{topic} Product Review - Amazing Experience",
-            "url": f"https://example.com/{topic.lower()}-review-1",
-            "text": f"I absolutely love {topic}! The quality is outstanding and the customer service is exceptional. "
-                    f"Would highly recommend to anyone looking for a reliable brand. Five stars!",
-            "published_date": timestamps[0].isoformat(),
-            "published_timestamp": timestamps[0].timestamp()
-        },
-        {
-            "title": f"Disappointed with {topic} Latest Release",
-            "url": f"https://example.com/{topic.lower()}-review-2",
-            "text": f"Very frustrated with {topic}'s new product. It has numerous technical bugs and crashes frequently. "
-                    f"The app freezes every time I try to use the main feature. Customer support was unhelpful. "
-                    f"This is unacceptable for a premium brand.",
-            "published_date": timestamps[1].isoformat(),
-            "published_timestamp": timestamps[1].timestamp()
-        },
-        {
-            "title": f"{topic} Safety Concerns Raised",
-            "url": f"https://example.com/{topic.lower()}-safety",
-            "text": f"Multiple users have reported safety risks with {topic} products. There are concerns about "
-                    f"overheating issues and potential fire hazards. The company needs to address these serious "
-                    f"safety problems immediately before someone gets hurt.",
-            "published_date": timestamps[2].isoformat(),
-            "published_timestamp": timestamps[2].timestamp()
-        },
-        {
-            "title": f"Neutral Opinion on {topic}",
-            "url": f"https://example.com/{topic.lower()}-neutral",
-            "text": f"{topic} is an okay brand. Nothing special, but gets the job done. "
-                    f"The price is fair for what you get. Would consider buying again.",
-            "published_date": timestamps[3].isoformat(),
-            "published_timestamp": timestamps[3].timestamp()
-        },
-        {
-            "title": f"Hate Speech Against {topic} on Social Media",
-            "url": f"https://example.com/{topic.lower()}-controversy",
-            "text": f"There's been a surge of hate speech and offensive comments targeting {topic} on social media. "
-                    f"Users are posting discriminatory content and harassment directed at the brand and its customers. "
-                    f"This toxic behavior is creating a hostile environment online.",
-            "published_date": timestamps[4].isoformat(),
-            "published_timestamp": timestamps[4].timestamp()
-        },
-        {
-            "title": f"{topic} Exceeds Expectations",
-            "url": f"https://example.com/{topic.lower()}-positive-2",
-            "text": f"Been using {topic} for months now and couldn't be happier. The product quality is excellent "
-                    f"and the value for money is great. Customer support team is very responsive and helpful.",
-            "published_date": timestamps[5].isoformat(),
-            "published_timestamp": timestamps[5].timestamp()
-        },
-        {
-            "title": f"Technical Issues Plague {topic} Users",
-            "url": f"https://example.com/{topic.lower()}-bugs",
-            "text": f"Users are reporting widespread technical bugs with {topic}. The software is unstable and "
-                    f"crashes regularly. Many customers are experiencing data loss and connectivity issues. "
-                    f"These technical problems need urgent attention from the development team.",
-            "published_date": timestamps[6].isoformat(),
-            "published_timestamp": timestamps[6].timestamp()
-        },
-        {
-            "title": f"{topic} Customer Frustration Growing",
-            "url": f"https://example.com/{topic.lower()}-frustration",
-            "text": f"Growing product frustration among {topic} customers. Many users report that the latest updates "
-                    f"have made the product worse. Features that previously worked are now broken. "
-                    f"The user experience has significantly deteriorated.",
-            "published_date": timestamps[7].isoformat(),
-            "published_timestamp": timestamps[7].timestamp()
-        }
-    ]
+# Mock data removed - use real APIs only (Exa or Tavily)
 
 
 # ============================================================================
@@ -776,11 +680,48 @@ def strategy_agent(state: AgentState) -> AgentState:
              sm_summary += f"  - *Issue:* {reply['content']}\n"
              sm_summary += f"  - *Draft Reply:* {reply['draft_reply']}\n"
     
-    # Initialize LLM
+    # Initialize LLM with try-except
+    llm = None
     try:
         llm = get_agent_llm("report", temperature=0.7)
     except Exception as e:
-        print(f"⚠️ Failed to initialize LLM: {e}. Falling back to template.")
+        print(f"⚠️ Failed to initialize LLM: {e}")
+        print(f"   Generating template report without LLM...")
+    
+    # If LLM is not available, create a template report
+    if llm is None:
+        risk_metrics = state.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
+        report = f"""
+# BRANDSHIELD STRATEGIC REPORT
+## Brand: {topic}
+
+### EXECUTIVE SUMMARY
+This report analyzes recent brand sentiment and potential crisis indicators for {topic}.
+
+**Risk Level**: {risk_metrics["level"]} ({risk_metrics["score"]}/100)
+**Sentiment Velocity**: {risk_metrics["velocity"]}%
+**Overall Sentiment**: {sentiment_stats.get('overall_sentiment', 'Unknown')}
+**Dominant Emotion**: {emotion_analysis.get('dominant_emotion', 'Unknown')}
+
+### DETAILED FINDINGS
+{rag_findings}
+
+{sm_summary}
+
+### RECOMMENDATIONS
+1. Monitor sentiment trends closely
+2. Address negative feedback promptly
+3. Prepare crisis communication materials
+4. Review social media engagement strategy
+
+---
+*Generated by BrandShield Deep Research Agent*
+*Note: Full LLM-generated report unavailable - using template*
+"""
+        state["draft_report"] = report
+        state["revision_count"] = revision_count
+        state["final_report"] = report
+        print("✅ Strategic report template generated (LLM unavailable)")
         return state
     
     # Construct the prompt
