@@ -12,10 +12,10 @@ from textblob import TextBlob
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # LangChain & RAG
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 # Search
 try:
@@ -28,7 +28,7 @@ except ImportError:
 from src.state import AgentState
 from src.advanced_agents import analyze_emotions, check_rag_relevance, refine_search_query
 from src.llm_utils import get_llm, get_agent_llm
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 
 # ============================================================================
@@ -275,6 +275,7 @@ def rag_agent(state: AgentState) -> AgentState:
             "vader_compound": 0, "textblob_polarity": 0,
             "overall_sentiment": "Neutral", "risk_score": 0
         }
+        state["risk_metrics"] = {"score": 0, "level": "LOW", "velocity": 0}
         state["rag_findings"] = "No recent content found (past 2 days)."
         return state
     
@@ -690,7 +691,7 @@ def strategy_agent(state: AgentState) -> AgentState:
     
     # If LLM is not available, create a template report
     if llm is None:
-        risk_metrics = state.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
+        risk_metrics = state.get("risk_metrics") or {"score": 0, "level": "LOW", "velocity": 0}
         report = f"""
 # BRANDSHIELD STRATEGIC REPORT
 ## Brand: {topic}
@@ -764,7 +765,7 @@ Include:
                          "dominant_emotion", "viral_risk", "rag_findings", "sm_summary", "critic_feedback"]
     )
     
-    risk_metrics = state.get("risk_metrics", {"score": 0, "level": "LOW", "velocity": 0})
+    risk_metrics = state.get("risk_metrics") or {"score": 0, "level": "LOW", "velocity": 0}
     
     formatted_prompt = prompt.format(
         topic=topic,
