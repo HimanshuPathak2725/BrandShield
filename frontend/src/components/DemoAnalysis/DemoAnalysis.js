@@ -42,11 +42,11 @@ function DemoAnalysis() {
       <div style={{
         marginTop: '20px',
         padding: '16px',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#6a9dd4',
         borderRadius: '8px',
         textAlign: 'center',
         fontSize: '0.9rem',
-        color: '#666'
+        color: '#f8f2f2'
       }}>
         💡 Powered by LangGraph, Google Gemini, and FAISS Vector Database
       </div>
