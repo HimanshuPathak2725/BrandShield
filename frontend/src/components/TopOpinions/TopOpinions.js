@@ -1,44 +1,22 @@
 import React from 'react';
 import './TopOpinions.css';
 
-function TopOpinions() {
-  const positiveOpinions = [
-    {
-      id: 1,
-      aspect: 'Design',
-      sentiment: 'Strongly Positive',
-      text: '"The titanium finish feels absolutely amazing in hand. It\'s so much lighter than the previous pro models. Apple finally nailed the ergonomics!"',
-      source: 'X'
-    },
-    {
-      id: 2,
-      aspect: 'Camera',
-      sentiment: 'Positive',
-      text: '"The 5x zoom is a game changer for concert photography. Super crisp results even in low light."',
-      source: 'Reddit'
-    }
-  ];
-
-  const negativeOpinions = [
-    {
-      id: 1,
-      aspect: 'Price',
-      sentiment: 'Negative',
-      text: '"$1200 is just too much for this minor upgrade. The base storage should at least be 512GB at this price point. Disappointed."',
-      source: 'X'
-    },
-    {
-      id: 2,
-      aspect: 'Availability',
-      sentiment: 'Frustrated',
-      text: '"Sold out everywhere within 5 minutes? This launch feels like a paper launch. Can\'t even get a delivery date until November."',
-      source: 'Reddit'
-    }
-  ];
+function TopOpinions({ positiveOpinions = [], negativeOpinions = [] }) {
+  const hasPositive = positiveOpinions.length > 0;
+  const hasNegative = negativeOpinions.length > 0;
 
   const getSentimentColor = (sentiment) => {
+    if (!sentiment) return 'neutral';
     if (sentiment.includes('Positive') || sentiment.includes('Strongly')) return 'positive';
     return 'negative';
+  };
+
+  const getSourceIcon = (source) => {
+    if (!source) return '📱';
+    const s = source.toLowerCase();
+    if (s.includes('x') || s.includes('twitter')) return '𝕏';
+    if (s.includes('reddit')) return '🤖';
+    return '📱';
   };
 
   return (
@@ -53,18 +31,24 @@ function TopOpinions() {
             <span>MOST POSITIVE</span>
           </div>
 
-          {positiveOpinions.map(opinion => (
-            <div key={opinion.id} className="opinion-card">
-              <div className="opinion-source">{opinion.source === 'X' ? '𝕏' : '📱'}</div>
-              <div className="opinion-tags">
-                <span className="tag">{opinion.aspect}</span>
-                <span className={`tag sentiment ${getSentimentColor(opinion.sentiment)}`}>
-                  {opinion.sentiment}
-                </span>
-              </div>
-              <p className="opinion-text">{opinion.text}</p>
+          {!hasPositive ? (
+             <div className="opinion-empty-state">
+               No significant positive opinions detected in this analysis.
             </div>
-          ))}
+          ) : (
+            positiveOpinions.map((opinion, idx) => (
+              <div key={opinion.id || idx} className="opinion-card">
+                <div className="opinion-source">{getSourceIcon(opinion.source)}</div>
+                <div className="opinion-tags">
+                  <span className="tag">{opinion.aspect || 'General'}</span>
+                  <span className={`tag sentiment ${getSentimentColor(opinion.sentiment)}`}>
+                    {opinion.sentiment}
+                  </span>
+                </div>
+                <p className="opinion-text">"{opinion.text}"</p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Negative Column */}
@@ -74,18 +58,24 @@ function TopOpinions() {
             <span>MOST NEGATIVE</span>
           </div>
 
-          {negativeOpinions.map(opinion => (
-            <div key={opinion.id} className="opinion-card">
-              <div className="opinion-source">{opinion.source === 'X' ? '𝕏' : '📱'}</div>
-              <div className="opinion-tags">
-                <span className="tag">{opinion.aspect}</span>
-                <span className={`tag sentiment ${getSentimentColor(opinion.sentiment)}`}>
-                  {opinion.sentiment}
-                </span>
-              </div>
-              <p className="opinion-text">{opinion.text}</p>
+          {!hasNegative ? (
+             <div className="opinion-empty-state">
+               No significant negative opinions detected in this analysis.
             </div>
-          ))}
+          ) : (
+             negativeOpinions.map((opinion, idx) => (
+              <div key={opinion.id || idx} className="opinion-card">
+                <div className="opinion-source">{getSourceIcon(opinion.source)}</div>
+                <div className="opinion-tags">
+                  <span className="tag">{opinion.aspect || 'General'}</span>
+                  <span className={`tag sentiment ${getSentimentColor(opinion.sentiment)}`}>
+                    {opinion.sentiment}
+                  </span>
+                </div>
+                <p className="opinion-text">"{opinion.text}"</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </section>

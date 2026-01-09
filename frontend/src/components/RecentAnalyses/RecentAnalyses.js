@@ -67,11 +67,11 @@ function RecentAnalyses() {
       <div style={{
         marginTop: '16px',
         padding: '12px',
-        backgroundColor: '#f0f7ff',
+        backgroundColor: '#3a85df',
         borderRadius: '8px',
         textAlign: 'center',
         fontSize: '0.85rem',
-        color: '#4285F4',
+        color: '#dce1e8',
         fontWeight: '500'
       }}>
         🔄 Multi-agent orchestration via LangGraph

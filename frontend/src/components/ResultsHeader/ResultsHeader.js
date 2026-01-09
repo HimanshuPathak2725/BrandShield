@@ -31,6 +31,7 @@ function ResultsHeader({ setCurrentPage, brand }) {
             style={{
               padding: '8px 16px',
               backgroundColor: '#e8eaed',
+              color: '#1f2937',
               border: '1px solid #ddd',
               borderRadius: '8px',
               cursor: 'pointer',
@@ -46,6 +47,7 @@ function ResultsHeader({ setCurrentPage, brand }) {
             style={{
               padding: '8px 16px',
               backgroundColor: '#f8f9fa',
+              color: '#1f2937',
               border: '1px solid #ddd',
               borderRadius: '8px',
               cursor: 'pointer'
