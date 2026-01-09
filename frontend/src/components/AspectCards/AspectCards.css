@@ -1,0 +1,154 @@
+.aspect-section {
+  grid-column: span 12;
+}
+
+.aspect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.aspect-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.view-all-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1224e2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.view-all-btn:hover {
+  color: white;
+}
+
+.aspect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.aspect-card {
+  background: #1c1f33;
+  border: 1px solid #323767;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.aspect-card:hover {
+  border-color: rgba(18, 36, 226, 0.4);
+}
+
+.aspect-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.aspect-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.aspect-icon {
+  font-size: 1.25rem;
+}
+
+.aspect-h4 {
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.aspect-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.status-liked {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.status-disliked {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.status-mixed {
+  background: rgba(234, 179, 8, 0.1);
+  color: #facc15;
+  border-color: rgba(234, 179, 8, 0.2);
+}
+
+.aspect-bar-container {
+  margin-bottom: 0.5rem;
+}
+
+.aspect-bar {
+  display: flex;
+  height: 0.5rem;
+  width: 100%;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: #232648;
+}
+
+.bar-segment {
+  flex: 0 0 auto;
+}
+
+.bar-segment.pos {
+  background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+}
+
+.bar-segment.neu {
+  background: linear-gradient(90deg, #eab308 0%, #facc15 100%);
+}
+
+.bar-segment.neg {
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.aspect-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.625rem;
+  color: #9296c9;
+}
+
+.stat-label {
+  font-weight: 500;
+}
+
+.stat-label.pos {
+  color: #4ade80;
+}
+
+.stat-label.neu {
+  color: #facc15;
+}
+
+.stat-label.neg {
+  color: #f87171;
+}
