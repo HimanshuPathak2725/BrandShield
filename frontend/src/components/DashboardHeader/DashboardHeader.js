@@ -21,6 +21,21 @@ function DashboardHeader() {
         </nav>
 
         <div className="header-right">
+          <Link 
+            to="/auth" 
+            className="nav-link"
+            style={{
+              textDecoration: 'none',
+              padding: '8px 16px',
+              backgroundColor: '#4285F4',
+              color: 'white',
+              borderRadius: '8px',
+              fontWeight: '600',
+              marginRight: '12px'
+            }}
+          >
+            Login/Signup
+          </Link>
           <div style={{
             padding: '8px 16px',
             backgroundColor: '#f8f9fa',

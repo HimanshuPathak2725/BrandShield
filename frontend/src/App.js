@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import ResultsPage from './pages/ResultsPage';
 import TrendsPage from './pages/TrendsPage/TrendsPage';
 import InsightsPage from './pages/InsightsPage/InsightsPage';
+import AuthPage from './pages/AuthPage/AuthPage';
 import NotFound from './pages/NotFound';
 
 function HomePage() {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/trends" element={<TrendsPage />} />
         <Route path="/results" element={<ResultsPage />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

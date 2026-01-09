@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AuthPage.css';
 
-function AuthPage({ setCurrentPage, setIsAuthenticated }) {
+function AuthPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -25,21 +27,21 @@ function AuthPage({ setCurrentPage, setIsAuthenticated }) {
   const handleLogin = (e) => {
     e.preventDefault();
     // Simulate login
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
+    localStorage.setItem('isAuthenticated', 'true');
+    navigate('/dashboard');
   };
 
   const handleSignUp = (e) => {
     e.preventDefault();
     // Simulate sign up
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
+    localStorage.setItem('isAuthenticated', 'true');
+    navigate('/dashboard');
   };
 
   const handleGoogleSignIn = () => {
     // Simulate Google sign-in
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
+    localStorage.setItem('isAuthenticated', 'true');
+    navigate('/dashboard');
   };
 
   return (

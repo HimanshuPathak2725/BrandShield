@@ -16,6 +16,7 @@ function Header() {
           <a href="#how-it-works" className="nav-link">How It Works</a>
           <a href="#demo" className="nav-link">Demo</a>
           <a href="#about" className="nav-link">About</a>
+          <Link to="/auth" className="nav-link" style={{ textDecoration: 'none' }}>Login/Signup</Link>
         </nav>
         
         <Link to="/dashboard" className="cta-button" style={{ textDecoration: 'none' }}>Start Analysis</Link>
