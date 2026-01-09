@@ -6,7 +6,7 @@ function ResultsHeader({ setCurrentPage, brand }) {
     <header className="results-header">
       <div className="results-header-container">
         <div className="header-left">
-          <div className="header-logo" onClick={() => setCurrentPage('dashboard')} style={{ cursor: 'pointer' }}>
+          <div className="header-logo" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
             <span className="logo-icon">🛡️</span>
             <h1 className="logo-text">BrandShield AI</h1>
           </div>
@@ -27,6 +27,21 @@ function ResultsHeader({ setCurrentPage, brand }) {
 
           <button 
             className="platform-btn"
+            onClick={() => setCurrentPage('home')}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#e8eaed',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              marginRight: '12px'
+            }}
+          >
+            ← Home
+          </button>
+
+          <button 
+            className="platform-btn"
             onClick={() => setCurrentPage('dashboard')}
             style={{
               padding: '8px 16px',
@@ -36,7 +51,7 @@ function ResultsHeader({ setCurrentPage, brand }) {
               cursor: 'pointer'
             }}
           >
-            ← New Analysis
+            + New Analysis
           </button>
 
           <div className="live-indicator">

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ResultsHeader from '../components/ResultsHeader/ResultsHeader';
 import SentimentScore from '../components/SentimentScore/SentimentScore';
+import TrendWidget from '../components/TrendWidget/TrendWidget';
+import AspectCards from '../components/AspectCards/AspectCards';
+import TopOpinions from '../components/TopOpinions/TopOpinions';
 import AIInsight from '../components/AIInsight/AIInsight';
 import './ResultsPage.css';
 
@@ -36,31 +39,19 @@ function ResultsPage({ setCurrentPage }) {
   if (!analysisData) {
     return (
       <div className="results-page">
-        <div className="error-container" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          fontSize: '1.2rem'
-        }}>
-          <p>❌ No analysis data found</p>
-          <button 
-            onClick={() => setCurrentPage('dashboard')}
-            style={{
-              marginTop: '20px',
-              padding: '12px 24px',
-              fontSize: '1rem',
-              cursor: 'pointer',
-              backgroundColor: '#4285F4',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px'
-            }}
-          >
-            Back to Dashboard
-          </button>
-        </div>
+        <ResultsHeader setCurrentPage={setCurrentPage} />
+        <main className="results-main">
+          <div className="results-container">
+            <section className="results-row">
+              <SentimentScore />
+              <TrendWidget />
+            </section>
+
+            <AspectCards />
+            <TopOpinions />
+            <AIInsight />
+          </div>
+        </main>
       </div>
     );
   }
@@ -72,8 +63,11 @@ function ResultsPage({ setCurrentPage }) {
         <div className="results-container">
           <section className="results-row">
             <SentimentScore data={analysisData} />
+            <TrendWidget />
           </section>
 
+          <AspectCards />
+          <TopOpinions />
           <AIInsight data={analysisData} />
           
           {/* Display AI Findings */}
