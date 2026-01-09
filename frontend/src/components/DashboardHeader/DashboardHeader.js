@@ -1,22 +1,23 @@
 import React from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import './DashboardHeader.css';
 
-function DashboardHeader({ setCurrentPage }) {
+function DashboardHeader() {
   return (
     <header className="dashboard-header">
       <div className="dashboard-header-container">
         <div className="header-left">
-          <div className="logo" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
+          <Link to="/" className="logo" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="logo-icon">🛡️</span>
             <span className="logo-text">BrandShield AI</span>
-          </div>
+          </Link>
         </div>
 
         <nav className="header-nav">
-          <span className="nav-link" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>Home</span>
-          <a href="#dashboard" className="nav-link active" onClick={(e) => { e.preventDefault(); setCurrentPage('dashboard'); }}>Dashboard</a>
-          <a href="#insights" className="nav-link" onClick={(e) => { e.preventDefault(); setCurrentPage('insights'); }}>Insights</a>
-          <a href="#trends" className="nav-link" onClick={(e) => { e.preventDefault(); setCurrentPage('trends'); }}>Trends</a>
+          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} style={{ textDecoration: 'none' }}>Home</NavLink>
+          <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} style={{ textDecoration: 'none' }}>Dashboard</NavLink>
+          <NavLink to="/insights" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} style={{ textDecoration: 'none' }}>Insights</NavLink>
+          <NavLink to="/trends" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} style={{ textDecoration: 'none' }}>Trends</NavLink>
         </nav>
 
         <div className="header-right">

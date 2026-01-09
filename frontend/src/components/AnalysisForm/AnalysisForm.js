@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AnalysisForm.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-function AnalysisForm({ setCurrentPage }) {
+function AnalysisForm() {
+  const navigate = useNavigate();
   const [target, setTarget] = useState('');
   const [dataSource, setDataSource] = useState('Reddit Discussions');
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,7 @@ function AnalysisForm({ setCurrentPage }) {
       // Store session data in localStorage for ResultsPage
       localStorage.setItem('currentAnalysis', JSON.stringify(data));
       
-      setCurrentPage('results');
+      navigate('/results');
     } catch (err) {
       setError(err.message || 'Failed to start analysis. Please check your API configuration.');
       console.error('Analysis error:', err);

@@ -12,7 +12,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.state import AgentState
 from src.llm_utils import get_llm, get_agent_llm
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 
 # ============================================================================

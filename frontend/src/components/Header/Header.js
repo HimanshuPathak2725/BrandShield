@@ -1,14 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Header.css';
 
-function Header({ setCurrentPage }) {
+function Header() {
   return (
     <header className="header">
       <div className="header-container">
-        <div className="logo">
+        <Link to="/" className="logo" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="shield-icon">🛡️</div>
           <span className="logo-text">BrandShield</span>
-        </div>
+        </Link>
         
         <nav className="nav-links">
           <a href="#product" className="nav-link">Product</a>
@@ -17,7 +18,7 @@ function Header({ setCurrentPage }) {
           <a href="#about" className="nav-link">About</a>
         </nav>
         
-        <button className="cta-button" onClick={() => setCurrentPage('dashboard')}>Start Analysis</button>
+        <Link to="/dashboard" className="cta-button" style={{ textDecoration: 'none' }}>Start Analysis</Link>
       </div>
     </header>
   );

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './TrendsPage.css';
 
-function TrendsPage({ setCurrentPage, setIsAuthenticated }) {
+function TrendsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeTimeRange, setActiveTimeRange] = useState('30days');
 
@@ -93,7 +93,7 @@ function TrendsPage({ setCurrentPage, setIsAuthenticated }) {
 
   return (
     <div className="trends-page">
-      <DashboardHeader setCurrentPage={setCurrentPage} />
+      <DashboardHeader />
       
       <main className="trends-main">
         {/* Page Heading */}

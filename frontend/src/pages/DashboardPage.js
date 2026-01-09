@@ -5,14 +5,14 @@ import RecentAnalyses from '../components/RecentAnalyses/RecentAnalyses';
 import DemoAnalysis from '../components/DemoAnalysis/DemoAnalysis';
 import './DashboardPage.css';
 
-function DashboardPage({ setCurrentPage }) {
+function DashboardPage() {
   return (
     <div className="dashboard-page">
-      <DashboardHeader setCurrentPage={setCurrentPage} />
+      <DashboardHeader />
       <main className="dashboard-main">
         <div className="dashboard-container">
           <div className="dashboard-content">
-            <AnalysisForm setCurrentPage={setCurrentPage} />
+            <AnalysisForm />
             <DemoAnalysis />
           </div>
           <aside className="dashboard-sidebar">

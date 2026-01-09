@@ -28,7 +28,7 @@ except ImportError:
 from src.state import AgentState
 from src.advanced_agents import analyze_emotions, check_rag_relevance, refine_search_query
 from src.llm_utils import get_llm, get_agent_llm
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 
 # ============================================================================

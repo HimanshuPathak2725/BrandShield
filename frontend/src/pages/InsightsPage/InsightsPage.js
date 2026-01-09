@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './InsightsPage.css';
 
-function InsightsPage({ setCurrentPage, setIsAuthenticated }) {
+function InsightsPage() {
   const [activeTimeRange, setActiveTimeRange] = useState('7d');
   const [activeAspect, setActiveAspect] = useState('design');
 
@@ -28,7 +28,7 @@ function InsightsPage({ setCurrentPage, setIsAuthenticated }) {
 
   return (
     <div className="insights-page">
-      <DashboardHeader setCurrentPage={setCurrentPage} />
+      <DashboardHeader />
 
       <main className="insights-main">
         {/* Page Header & Controls */}

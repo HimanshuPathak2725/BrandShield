@@ -7,7 +7,7 @@ import TopOpinions from '../components/TopOpinions/TopOpinions';
 import AIInsight from '../components/AIInsight/AIInsight';
 import './ResultsPage.css';
 
-function ResultsPage({ setCurrentPage }) {
+function ResultsPage() {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +39,7 @@ function ResultsPage({ setCurrentPage }) {
   if (!analysisData) {
     return (
       <div className="results-page">
-        <ResultsHeader setCurrentPage={setCurrentPage} />
+        <ResultsHeader />
         <main className="results-main">
           <div className="results-container">
             <section className="results-row">
@@ -58,7 +58,7 @@ function ResultsPage({ setCurrentPage }) {
 
   return (
     <div className="results-page">
-      <ResultsHeader setCurrentPage={setCurrentPage} brand={analysisData.brand} />
+      <ResultsHeader brand={analysisData.brand} />
       <main className="results-main">
         <div className="results-container">
           <section className="results-row">

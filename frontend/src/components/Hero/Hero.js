@@ -1,8 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Hero.css';
 import Dashboard from '../Dashboard/Dashboard';
 
-function Hero({ setCurrentPage }) {
+function Hero() {
   return (
     <section className="hero">
       <div className="hero-container">
@@ -24,9 +25,9 @@ function Hero({ setCurrentPage }) {
           </p>
           
           <div className="hero-buttons">
-            <button className="btn btn-primary" onClick={() => setCurrentPage('dashboard')}>
+            <Link to="/dashboard" className="btn btn-primary" style={{ textDecoration: 'none' }}>
               <span className="btn-icon">▶</span> Start Analysis
-            </button>
+            </Link>
             <button className="btn btn-secondary">
               <span className="btn-icon">⏯</span> View Demo
             </button>

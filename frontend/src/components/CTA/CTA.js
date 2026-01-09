@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './CTA.css';
 
-function CTA({ setCurrentPage }) {
+function CTA() {
   return (
     <section className="cta">
       <div className="cta-container">
@@ -10,7 +11,7 @@ function CTA({ setCurrentPage }) {
           Join over 500 product teams using BrandShield to launch with confidence.
         </p>
         <div className="cta-buttons">
-          <button className="cta-btn cta-btn-primary" onClick={() => setCurrentPage('dashboard')}>Get Started Free</button>
+          <Link to="/dashboard" className="cta-btn cta-btn-primary" style={{ textDecoration: 'none' }}>Get Started Free</Link>
           <button className="cta-btn cta-btn-secondary">Schedule Demo</button>
         </div>
       </div>
