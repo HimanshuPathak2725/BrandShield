@@ -7,16 +7,33 @@ import CTA from './components/CTA/CTA';
 import Footer from './components/Footer/Footer';
 import DashboardPage from './pages/DashboardPage';
 import ResultsPage from './pages/ResultsPage';
+import TrendsPage from './pages/TrendsPage/TrendsPage';
+import InsightsPage from './pages/InsightsPage/InsightsPage';
+import AuthPage from './pages/AuthPage/AuthPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // If not authenticated and trying to access protected pages, show auth
+  if (!isAuthenticated && (currentPage === 'dashboard' || currentPage === 'results' || currentPage === 'trends' || currentPage === 'insights')) {
+    return <AuthPage setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
+  }
 
   if (currentPage === 'dashboard') {
-    return <DashboardPage setCurrentPage={setCurrentPage} />;
+    return <DashboardPage setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
   }
 
   if (currentPage === 'results') {
-    return <ResultsPage setCurrentPage={setCurrentPage} />;
+    return <ResultsPage setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
+  }
+
+  if (currentPage === 'trends') {
+    return <TrendsPage setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
+  }
+
+  if (currentPage === 'insights') {
+    return <InsightsPage setCurrentPage={setCurrentPage} setIsAuthenticated={setIsAuthenticated} />;
   }
 
   return (

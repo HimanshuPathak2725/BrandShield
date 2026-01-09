@@ -14,7 +14,9 @@ function DashboardHeader({ setCurrentPage }) {
 
         <nav className="header-nav">
           <span className="nav-link" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>Home</span>
-          <span className="nav-link active">AI Crisis Predictor</span>
+          <a href="#dashboard" className="nav-link active" onClick={(e) => { e.preventDefault(); setCurrentPage('dashboard'); }}>Dashboard</a>
+          <a href="#insights" className="nav-link" onClick={(e) => { e.preventDefault(); setCurrentPage('insights'); }}>Insights</a>
+          <a href="#trends" className="nav-link" onClick={(e) => { e.preventDefault(); setCurrentPage('trends'); }}>Trends</a>
         </nav>
 
         <div className="header-right">
