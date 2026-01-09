@@ -6,24 +6,26 @@ function DashboardHeader({ setCurrentPage }) {
     <header className="dashboard-header">
       <div className="dashboard-header-container">
         <div className="header-left">
-          <div className="logo" onClick={() => setCurrentPage('home')} style={{ cursor: 'pointer' }}>
+          <div className="logo">
             <span className="logo-icon">🛡️</span>
-            <span className="logo-text">BrandShield</span>
+            <span className="logo-text">BrandShield AI</span>
           </div>
         </div>
 
         <nav className="header-nav">
-          <a href="#dashboard" className="nav-link active">Dashboard</a>
-          <a href="#insights" className="nav-link">Insights</a>
-          <a href="#trends" className="nav-link">Trends</a>
+          <span className="nav-link active">AI Crisis Predictor</span>
         </nav>
 
         <div className="header-right">
-          <button className="notification-btn">
-            <span className="bell-icon">🔔</span>
-            <span className="notification-dot"></span>
-          </button>
-          <button className="profile-btn">👤</button>
+          <div style={{
+            padding: '8px 16px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            color: '#666'
+          }}>
+            🤖 Powered by Advanced AI Agents
+          </div>
         </div>
       </div>
     </header>

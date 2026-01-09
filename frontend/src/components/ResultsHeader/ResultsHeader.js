@@ -1,34 +1,47 @@
 import React from 'react';
 import './ResultsHeader.css';
 
-function ResultsHeader({ setCurrentPage }) {
+function ResultsHeader({ setCurrentPage, brand }) {
   return (
     <header className="results-header">
       <div className="results-header-container">
         <div className="header-left">
-          <div className="header-logo">
+          <div className="header-logo" onClick={() => setCurrentPage('dashboard')} style={{ cursor: 'pointer' }}>
             <span className="logo-icon">🛡️</span>
-            <h1 className="logo-text">BrandShield</h1>
+            <h1 className="logo-text">BrandShield AI</h1>
           </div>
           <div className="header-divider"></div>
-          <p className="page-title">Live Public Reaction Monitor</p>
+          <p className="page-title">AI Crisis Analysis Dashboard</p>
         </div>
 
         <div className="header-right">
-          <select className="product-dropdown">
-            <option>iPhone 15 Pro Max</option>
-            <option>Tesla Cybertruck</option>
-            <option>GTA VI Trailer</option>
-          </select>
-
-          <div className="platform-toggles">
-            <button className="platform-btn">📱 Reddit</button>
-            <button className="platform-btn">𝕏 X (Twitter)</button>
+          <div style={{ 
+            padding: '8px 16px', 
+            backgroundColor: '#4285F4', 
+            color: 'white', 
+            borderRadius: '8px',
+            fontWeight: 'bold'
+          }}>
+            {brand || 'Analysis'}
           </div>
+
+          <button 
+            className="platform-btn"
+            onClick={() => setCurrentPage('dashboard')}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            ← New Analysis
+          </button>
 
           <div className="live-indicator">
             <span className="live-dot"></span>
-            <span className="live-text">LIVE</span>
+            <span className="live-text">AI ACTIVE</span>
           </div>
         </div>
       </div>

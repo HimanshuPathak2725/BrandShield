@@ -2,42 +2,53 @@ import React from 'react';
 import './DemoAnalysis.css';
 
 function DemoAnalysis() {
-  const demoAnalyses = [
+  const aiFeatures = [
     {
       id: 1,
-      title: 'BMW EV Launch',
-      description: 'Sentiment analysis on new IX series release.',
-      icon: '🚗'
+      title: 'Advanced RAG',
+      description: 'Semantic search with vector embeddings for hidden crisis patterns.',
+      icon: '🧠'
     },
     {
       id: 2,
-      title: 'iPhone Launch',
-      description: 'Global reaction tracking for latest keynote.',
-      icon: '📱'
+      title: 'Multi-Agent AI',
+      description: 'Planning, Search, Evaluator, and Strategy agents working in concert.',
+      icon: '🤖'
     },
     {
       id: 3,
-      title: 'Headphones Pricing',
-      description: 'Market response to premium audio pricing.',
-      icon: '🎧'
+      title: 'Crisis Prediction',
+      description: 'Real-time risk scoring with emotion analysis and trend detection.',
+      icon: '⚡'
     }
   ];
 
   return (
     <section className="demo-analysis">
       <div className="demo-header">
-        <h2 className="demo-title">TRY A DEMO ANALYSIS</h2>
+        <h2 className="demo-title">AI CAPABILITIES</h2>
       </div>
 
       <div className="demo-grid">
-        {demoAnalyses.map((demo) => (
-          <div key={demo.id} className="demo-card">
-            <div className="demo-icon">{demo.icon}</div>
-            <h3 className="demo-card-title">{demo.title}</h3>
-            <p className="demo-description">{demo.description}</p>
-            <button className="demo-btn">View Analysis →</button>
+        {aiFeatures.map((feature) => (
+          <div key={feature.id} className="demo-card">
+            <div className="demo-icon">{feature.icon}</div>
+            <h3 className="demo-card-title">{feature.title}</h3>
+            <p className="demo-description">{feature.description}</p>
           </div>
         ))}
+      </div>
+
+      <div style={{
+        marginTop: '20px',
+        padding: '16px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        textAlign: 'center',
+        fontSize: '0.9rem',
+        color: '#666'
+      }}>
+        💡 Powered by LangGraph, Google Gemini, and FAISS Vector Database
       </div>
     </section>
   );

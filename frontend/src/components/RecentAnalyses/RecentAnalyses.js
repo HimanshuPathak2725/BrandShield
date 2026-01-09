@@ -2,80 +2,80 @@ import React from 'react';
 import './RecentAnalyses.css';
 
 function RecentAnalyses() {
-  const analyses = [
+  const aiAgents = [
     {
       id: 1,
-      name: 'Nike Air Jordan',
-      source: 'Reddit',
-      timestamp: '2h ago',
-      badge: 'Insane',
-      badgeColor: 'orange'
+      name: 'Planning Agent',
+      description: 'Research strategy',
+      icon: '🗺️',
+      status: 'Ready'
     },
     {
       id: 2,
-      name: 'SpaceX Starship',
-      source: 'Twitter',
-      timestamp: '1d ago',
-      badge: 'Trending',
-      badgeColor: 'blue'
+      name: 'Search Agent',
+      description: 'Web scraping',
+      icon: '🔍',
+      status: 'Ready'
     },
     {
       id: 3,
-      name: 'OpenAI Leadership',
-      source: 'News',
-      timestamp: '3d ago',
-      badge: 'Breaking',
-      badgeColor: 'purple'
+      name: 'RAG Agent',
+      description: 'Semantic analysis',
+      icon: '🧠',
+      status: 'Ready'
     },
     {
       id: 4,
-      name: 'PS5 Pro Release',
-      source: 'Reddit',
-      timestamp: '5d ago',
-      badge: 'Viral',
-      badgeColor: 'orange'
+      name: 'Strategy Agent',
+      description: 'Report generation',
+      icon: '📊',
+      status: 'Ready'
     }
   ];
-
-  const getIcon = (source) => {
-    const icons = {
-      'Reddit': '📱',
-      'Twitter': '🐦',
-      'News': '📰',
-      'TikTok': '🎵',
-      'YouTube': '📺'
-    };
-    return icons[source] || '📱';
-  };
 
   return (
     <div className="recent-analyses">
       <div className="analyses-header">
-        <h3 className="analyses-title">Recent Analyses</h3>
-        <button className="refresh-btn">🔄</button>
+        <h3 className="analyses-title">AI Agent Pipeline</h3>
       </div>
 
       <div className="analyses-list">
-        {analyses.map((analysis) => (
-          <div key={analysis.id} className="analysis-item">
+        {aiAgents.map((agent) => (
+          <div key={agent.id} className="analysis-item">
             <div className="analysis-icon">
-              {getIcon(analysis.source)}
+              {agent.icon}
             </div>
             <div className="analysis-info">
-              <h4 className="analysis-name">{analysis.name}</h4>
-              <span className={`analysis-badge badge-${analysis.badgeColor}`}>
-                {analysis.badge}
-              </span>
-              <p className="analysis-meta">
-                {analysis.source} • {analysis.timestamp}
+              <h4 className="analysis-name">{agent.name}</h4>
+              <p className="analysis-meta" style={{ marginTop: '4px' }}>
+                {agent.description}
               </p>
             </div>
-            <button className="analysis-action">→</button>
+            <span style={{
+              padding: '4px 8px',
+              backgroundColor: '#0F9D58',
+              color: 'white',
+              borderRadius: '4px',
+              fontSize: '0.75rem'
+            }}>
+              ✓
+            </span>
           </div>
         ))}
       </div>
 
-      <button className="view-all-btn">VIEW ALL HISTORY</button>
+      <div style={{
+        marginTop: '16px',
+        padding: '12px',
+        backgroundColor: '#f0f7ff',
+        borderRadius: '8px',
+        textAlign: 'center',
+        fontSize: '0.85rem',
+        color: '#4285F4',
+        fontWeight: '500'
+      }}>
+        🔄 Multi-agent orchestration via LangGraph
+      </div>
     </div>
   );
 }
