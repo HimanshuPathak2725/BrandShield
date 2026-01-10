@@ -8,7 +8,14 @@ from datetime import datetime, timedelta
 import pytz
 
 # Sentiment Analysis
-from textblob import TextBlob
+# TextBlob disabled due to scipy import delays on Windows
+# try:
+#     from textblob import TextBlob
+#     TEXTBLOB_AVAILABLE = True
+# except ImportError:
+#     TEXTBLOB_AVAILABLE = False
+#     print("⚠️ TextBlob not available (scipy import issue). Using VADER only.")
+TEXTBLOB_AVAILABLE = False
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # LangChain & RAG
@@ -471,9 +478,13 @@ def rag_agent(state: AgentState) -> AgentState:
     # VADER sentiment
     vader_scores = sentiment_vader.polarity_scores(all_text)
     
-    # TextBlob sentiment
-    blob = TextBlob(all_text)
-    textblob_polarity = blob.sentiment.polarity
+    # TextBlob sentiment (optional)
+    if TEXTBLOB_AVAILABLE:
+        blob = TextBlob(all_text)
+        textblob_polarity = blob.sentiment.polarity
+    else:
+        # Use VADER compound score as fallback
+        textblob_polarity = vader_scores['compound']
     
     # Calculate sentiment distribution
     positive_count = sum(1 for item in filtered_content 

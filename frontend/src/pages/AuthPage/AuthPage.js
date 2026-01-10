@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AuthPage.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function AuthPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,26 +26,103 @@ function AuthPage() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
+    setError(''); // Clear error on input change
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulate login
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/dashboard');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    // Simulate sign up
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/dashboard');
+    setLoading(true);
+    setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    // Validate terms agreement
+    if (!formData.agreeToTerms) {
+      setError('Please agree to the terms and conditions');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          company: formData.company
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    // Simulate Google sign-in
-    localStorage.setItem('isAuthenticated', 'true');
-    navigate('/dashboard');
+    setError('Google Sign-In will be implemented soon!');
   };
 
   return (
@@ -126,6 +207,12 @@ function AuthPage() {
                 <p className="auth-form-subtitle">Please enter your credentials to access your dashboard.</p>
               </div>
 
+              {error && (
+                <div className="auth-error-message">
+                  ⚠️ {error}
+                </div>
+              )}
+
               <form onSubmit={handleLogin} className="auth-form">
                 {/* Email Input */}
                 <div className="form-group">
@@ -185,8 +272,8 @@ function AuthPage() {
                 </div>
 
                 {/* Submit Button */}
-                <button type="submit" className="submit-btn">
-                  <span>Sign In to Dashboard</span>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  <span>{loading ? 'Signing In...' : 'Sign In to Dashboard'}</span>
                   <span className="btn-arrow">→</span>
                 </button>
               </form>
@@ -217,6 +304,12 @@ function AuthPage() {
                 <h2 className="auth-form-title">Create Account</h2>
                 <p className="auth-form-subtitle">Join BrandShield to access real-time market insights.</p>
               </div>
+
+              {error && (
+                <div className="auth-error-message">
+                  ⚠️ {error}
+                </div>
+              )}
 
               <form onSubmit={handleSignUp} className="auth-form">
                 {/* Name Input */}
@@ -315,8 +408,8 @@ function AuthPage() {
                 </div>
 
                 {/* Submit Button */}
-                <button type="submit" className="submit-btn">
-                  <span>Create Account</span>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
                   <span className="btn-arrow">→</span>
                 </button>
               </form>
