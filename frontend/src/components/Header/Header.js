@@ -55,7 +55,9 @@ function Header() {
         </Link>
         
         <nav className="nav-links">
-          {user && (
+          {!user ? (
+            <Link to="/auth" className="nav-link" style={{ textDecoration: 'none' }}>Login/Signup</Link>
+          ) : (
             <div className="user-menu" style={{ position: 'relative' }}>
               <button 
                 className="nav-link user-button" 
