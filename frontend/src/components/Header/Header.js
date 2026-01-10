@@ -55,14 +55,7 @@ function Header() {
         </Link>
         
         <nav className="nav-links">
-          <a href="#product" className="nav-link">Product</a>
-          <a href="#how-it-works" className="nav-link">How It Works</a>
-          <a href="#demo" className="nav-link">Demo</a>
-          <a href="#about" className="nav-link">About</a>
-          
-          {!user ? (
-            <Link to="/auth" className="nav-link" style={{ textDecoration: 'none' }}>Login/Signup</Link>
-          ) : (
+          {user && (
             <div className="user-menu" style={{ position: 'relative' }}>
               <button 
                 className="nav-link user-button" 
