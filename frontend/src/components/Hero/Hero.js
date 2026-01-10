@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaPlay, FaUser } from 'react-icons/fa';
 import './Hero.css';
 import Dashboard from '../Dashboard/Dashboard';
 
@@ -26,18 +27,18 @@ function Hero() {
           
           <div className="hero-buttons">
             <Link to="/dashboard" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-              <span className="btn-icon">▶</span> Start Analysis
+              <span className="btn-icon"><FaPlay /></span> Start Analysis
             </Link>
             <button className="btn btn-secondary">
-              <span className="btn-icon">⏯</span> View Demo
+              <span className="btn-icon"><FaPlay /></span> View Demo
             </button>
           </div>
           
           <div className="trusted-by">
             <div className="avatars">
-              <div className="avatar">👤</div>
-              <div className="avatar">👤</div>
-              <div className="avatar">👤</div>
+              <div className="avatar"><FaUser /></div>
+              <div className="avatar"><FaUser /></div>
+              <div className="avatar"><FaUser /></div>
             </div>
             <span className="trusted-text">Trusted by 500+ Product Teams</span>
           </div>

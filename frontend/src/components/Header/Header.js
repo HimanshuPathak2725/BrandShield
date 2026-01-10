@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaChevronDown } from 'react-icons/fa';
 import './Header.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -62,9 +63,9 @@ function Header() {
               <button 
                 className="nav-link user-button" 
                 onClick={() => setShowDropdown(!showDropdown)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                {user.name || user.email} ▼
+                {user.name || user.email} <FaChevronDown size={12} />
               </button>
               
               {showDropdown && (

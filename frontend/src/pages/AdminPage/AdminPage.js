@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import './AdminPage.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -40,7 +41,9 @@ function AdminPage() {
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <Link to="/" className="back-link">← Back to Home</Link>
+        <Link to="/" className="back-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+          <FaArrowLeft /> Back to Home
+        </Link>
         <h1>User Management Dashboard</h1>
         <p className="admin-subtitle">View all registered users</p>
       </div>

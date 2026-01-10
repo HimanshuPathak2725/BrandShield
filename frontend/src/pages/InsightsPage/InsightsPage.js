@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { FaCalendar, FaBullhorn, FaChartLine, FaChartBar, FaExternalLinkAlt } from 'react-icons/fa';
+import Header from '../../components/Header/Header';
+import Footer from '../../components/Footer/Footer';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './InsightsPage.css';
 
@@ -58,11 +61,11 @@ function InsightsPage() {
                 30d
               </button>
               <button className="time-btn custom-btn">
-                Custom <span className="calendar-icon">📅</span>
+                Custom <span className="calendar-icon"><FaCalendar /></span>
               </button>
             </div>
             <button className="export-btn">
-              <span className="export-icon">↗️</span>
+              <span className="export-icon"><FaExternalLinkAlt /></span>
               Export
             </button>
           </div>
@@ -144,7 +147,7 @@ function InsightsPage() {
                 </div>
               </div>
               <div className="tooltip-event">
-                <span className="event-icon">📢</span>
+                <span className="event-icon"><FaBullhorn /></span>
                 <span className="event-text">Influencer Review Spike</span>
               </div>
             </div>
@@ -170,7 +173,9 @@ function InsightsPage() {
               <div className="momentum-content">
                 <h4 className="momentum-value">{card.value}</h4>
                 <div className={`momentum-change ${card.changeType}`}>
-                  <span className="change-icon">{card.changeType === 'up' ? '📈' : '📉'}</span>
+                  <span className="change-icon">
+                    {card.changeType === 'up' ? <FaChartLine color="#4ade80" /> : <FaChartBar color="#f87171" />}
+                  </span>
                   <span className="change-value">{card.change}</span>
                 </div>
               </div>

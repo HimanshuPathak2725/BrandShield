@@ -1,4 +1,6 @@
 import React from 'react';
+import { FaShieldAlt, FaGithub } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import './Footer.css';
 
 function Footer() {
@@ -8,15 +10,15 @@ function Footer() {
         <div className="footer-content">
           <div className="footer-section footer-brand">
             <div className="footer-logo">
-              <span className="footer-logo-icon">🛡️</span>
+              <span className="footer-logo-icon"><FaShieldAlt /></span>
               <span className="footer-logo-text">BrandShield</span>
             </div>
             <p className="footer-description">
               Turning social noise into product signal. The leading AI intelligence platform for modern product teams.
             </p>
             <div className="footer-social">
-              <a href="#twitter" className="social-link">𝕏</a>
-              <a href="#github" className="social-link">⚙️</a>
+              <a href="#twitter" className="social-link"><FaXTwitter size={20} /></a>
+              <a href="#github" className="social-link"><FaGithub size={20} /></a>
             </div>
           </div>
 

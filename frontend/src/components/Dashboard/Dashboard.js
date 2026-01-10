@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaArrowUp } from 'react-icons/fa';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -17,7 +18,9 @@ function Dashboard() {
         <div className="metric-card">
           <h3 className="metric-label">Sentiment Score</h3>
           <div className="metric-value">84%</div>
-          <div className="metric-change positive">↑ +12%</div>
+          <div className="metric-change positive" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <FaArrowUp /> +12%
+          </div>
         </div>
 
         <div className="metric-card">

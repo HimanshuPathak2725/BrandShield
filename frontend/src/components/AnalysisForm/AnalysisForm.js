@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaExclamationTriangle, FaSearch } from 'react-icons/fa';
 import './AnalysisForm.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -77,9 +78,12 @@ function AnalysisForm() {
             padding: '12px',
             borderRadius: '8px',
             marginBottom: '16px',
-            border: '1px solid #fcc'
+            border: '1px solid #fcc',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            ⚠️ {error}
+            <FaExclamationTriangle /> {error}
           </div>
         )}
 
@@ -87,7 +91,7 @@ function AnalysisForm() {
           <div className="form-group">
             <label className="form-label">BRAND NAME</label>
             <div className="input-wrapper">
-              <span className="input-icon">🔍</span>
+              <span className="input-icon"><FaSearch /></span>
               <input
                 type="text"
                 className="form-input"

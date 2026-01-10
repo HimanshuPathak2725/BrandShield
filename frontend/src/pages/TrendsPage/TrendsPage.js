@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaSmile, FaFrown, FaMeh, FaChevronDown, FaChartLine, FaChartBar, FaComments, FaBrain } from 'react-icons/fa';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './TrendsPage.css';
 
@@ -183,14 +184,14 @@ function TrendsPage() {
               <h3 className="card-title">
                 Key Opinion Themes: <span className="italic-accent">Design</span>
               </h3>
-              <button className="filter-btn">🔽</button>
+              <button className="filter-btn"><FaChevronDown /></button>
             </div>
 
             <div className="themes-grid">
               {/* Positive Themes */}
               <div className="theme-section">
                 <div className="theme-header positive-header">
-                  <span className="trend-icon">📈</span>
+                  <span className="trend-icon"><FaChartLine color="#4ade80" size={20} /></span>
                   <span className="theme-title">Top Positive</span>
                 </div>
                 <div className="theme-tags">
@@ -206,7 +207,7 @@ function TrendsPage() {
               {/* Negative Themes */}
               <div className="theme-section">
                 <div className="theme-header negative-header">
-                  <span className="trend-icon">📉</span>
+                  <span className="trend-icon"><FaChartBar color="#f87171" size={20} /></span>
                   <span className="theme-title">Top Negative</span>
                 </div>
                 <div className="theme-tags">
@@ -226,7 +227,7 @@ function TrendsPage() {
         <div className="comments-card glass-card">
           <div className="comments-header">
             <h3 className="comments-title">
-              <span className="chat-icon">💬</span>
+              <span className="chat-icon"><FaComments size={24} /></span>
               Comment Traceability Feed
             </h3>
             <div className="comments-controls">
@@ -278,7 +279,7 @@ function TrendsPage() {
         <div className="ai-summary-card">
           <div className="ai-summary-content">
             <div className="ai-icon-box">
-              <span className="ai-icon">🧠</span>
+              <span className="ai-icon"><FaBrain size={24} /></span>
             </div>
             <div className="ai-summary-text">
               <div className="ai-header">

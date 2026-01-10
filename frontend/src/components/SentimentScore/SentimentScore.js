@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaThumbsUp } from 'react-icons/fa';
 import './SentimentScore.css';
 
 function SentimentScore({ data }) {
@@ -36,7 +37,7 @@ function SentimentScore({ data }) {
                 </linearGradient>
               </defs>
             </svg>
-            <div className="viz-icon">👍</div>
+            <div className="viz-icon"><FaThumbsUp size={24} /></div>
           </div>
         </div>
 

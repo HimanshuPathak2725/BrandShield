@@ -1,12 +1,13 @@
 import React from 'react';
+import { FaPalette, FaCreditCard, FaBolt, FaBatteryFull } from 'react-icons/fa';
 import './AspectCards.css';
 
 function AspectCards() {
   const aspects = [
-    { id: 1, name: 'Design', icon: '🎨', status: 'LIKED', pos: 80, neu: 10, neg: 10, color: 'green' },
-    { id: 2, name: 'Price', icon: '💳', status: 'DISLIKED', pos: 20, neu: 20, neg: 60, color: 'red' },
-    { id: 3, name: 'Performance', icon: '⚡', status: 'LIKED', pos: 90, neu: 5, neg: 5, color: 'green' },
-    { id: 4, name: 'Battery', icon: '🔋', status: 'MIXED', pos: 40, neu: 20, neg: 40, color: 'yellow' }
+    { id: 1, name: 'Design', icon: <FaPalette />, status: 'LIKED', pos: 80, neu: 10, neg: 10, color: 'green' },
+    { id: 2, name: 'Price', icon: <FaCreditCard />, status: 'DISLIKED', pos: 20, neu: 20, neg: 60, color: 'red' },
+    { id: 3, name: 'Performance', icon: <FaBolt />, status: 'LIKED', pos: 90, neu: 5, neg: 5, color: 'green' },
+    { id: 4, name: 'Battery', icon: <FaBatteryFull />, status: 'MIXED', pos: 40, neu: 20, neg: 40, color: 'yellow' }
   ];
 
   const getStatusColor = (color) => {

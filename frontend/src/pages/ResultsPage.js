@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaBrain } from 'react-icons/fa';
 import ResultsHeader from '../components/ResultsHeader/ResultsHeader';
 import SentimentScore from '../components/SentimentScore/SentimentScore';
 import TrendWidget from '../components/TrendWidget/TrendWidget';
@@ -118,7 +119,9 @@ function ResultsPage() {
               border: '1px solid #323767',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
             }}>
-              <h3 style={{ marginBottom: '16px', color: '#ffffff' }}>🧠 AI-Detected Issues</h3>
+              <h3 style={{ marginBottom: '16px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FaBrain /> AI-Detected Issues
+              </h3>
               <div className="findings-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',

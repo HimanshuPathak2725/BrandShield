@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaShieldAlt, FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 import './AuthPage.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -140,7 +141,7 @@ function AuthPage() {
         <div className="auth-left-content">
           {/* Logo */}
           <div className="auth-logo">
-            <div className="auth-logo-icon">🛡️</div>
+            <div className="auth-logo-icon"><FaShieldAlt size={40} /></div>
             <h2 className="auth-logo-text">BrandShield</h2>
           </div>
 
@@ -251,7 +252,7 @@ function AuthPage() {
                       className="password-toggle-btn"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? '👁️' : '🚫'}
+                      {showPassword ? <FaEye /> : <FaEyeSlash />}
                     </button>
                   </div>
                 </div>
@@ -436,11 +437,11 @@ function AuthPage() {
           {/* Trust Footer */}
           <div className="auth-trust-footer">
             <div className="trust-item">
-              <span className="trust-icon">🔒</span>
+              <span className="trust-icon"><FaLock /></span>
               <span className="trust-text">Secure authentication</span>
             </div>
             <div className="trust-item">
-              <span className="trust-icon">🛡️</span>
+              <span className="trust-icon"><FaShieldAlt /></span>
               <span className="trust-text">Data encrypted</span>
             </div>
           </div>
