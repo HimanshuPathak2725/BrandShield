@@ -1,11 +1,11 @@
 {
-  "nss@gmail.com": {
-    "id": "45743f29-17b8-4064-ad2c-c7bb0bbdfced",
-    "email": "nss@gmail.com",
-    "password": "scrypt:32768:8:1$KBfsoBKzW1pv3txB$71f45c930a27e08b7670b92db42281164ea9188f7033171d4d3c88b97ac9947c40b527f494512f821fcd733d0b08c312047fe684c20939246636589a44b2adf9",
-    "name": "Himanshu Pathak",
-    "company": "nss",
-    "created_at": "2026-01-11T15:03:22.360493",
-    "last_login": null
+  "nssofficialadgips@gmail.com": {
+    "id": "b7810b9b-1db1-4d07-8e48-f82fb425154f",
+    "email": "nssofficialadgips@gmail.com",
+    "password": "nssofficial12426",
+    "name": "Riya",
+    "company": "Adgips",
+    "created_at": "2026-01-10T22:09:42.104423",
+    "last_login": "2026-01-10T22:10:45.069522"
   }
 }
