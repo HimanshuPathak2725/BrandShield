@@ -3,6 +3,7 @@
   border: 1px solid #2a2f55;
   border-radius: 1.5rem;
   padding: 2.5rem;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
@@ -27,7 +28,9 @@
   font-size: 2rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 0.75rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 5;
 }
 
 .form-description {

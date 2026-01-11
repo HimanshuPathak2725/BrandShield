@@ -15,6 +15,7 @@ import './ResultsPage.css';
 function ResultsPage() {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeSimulation, setActiveSimulation] = useState(null);
 
   useEffect(() => {
     // Load analysis data from localStorage
@@ -28,6 +29,14 @@ function ResultsPage() {
     }
     setLoading(false);
   }, []);
+
+  const handleRunSimulation = (strategyId) => {
+    setActiveSimulation({ status: 'running', strategyId });
+    // Simulate API delay
+    setTimeout(() => {
+       setActiveSimulation({ status: 'complete', strategyId });
+    }, 2000);
+  };
 
   if (loading) {
     return (
@@ -111,8 +120,8 @@ function ResultsPage() {
           <AspectCards findings={analysisData.rag_findings} />
           <TopOpinions positiveOpinions={positiveOpinions.slice(0, 3)} negativeOpinions={negativeOpinions.slice(0, 3)} />
           <EmotionVelocityMonitor />
-          <ResponseStrategies />
-          <DigitalTwinSimulation />
+          <ResponseStrategies onSimulate={handleRunSimulation} />
+          <DigitalTwinSimulation simulationState={activeSimulation} />
           <AIInsight data={analysisData} />
           
           {/* Display AI Findings */}

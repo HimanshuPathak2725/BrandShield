@@ -193,6 +193,7 @@
 
 .glass-card {
   background: rgba(25, 27, 51, 0.6);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(50, 55, 103, 0.5);
   border-radius: 1.5rem;
@@ -358,7 +359,6 @@
 
 .italic-accent {
   color: #1224e2;
-  font-style: italic;
 }
 
 .filter-btn {

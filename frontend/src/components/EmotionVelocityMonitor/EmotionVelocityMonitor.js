@@ -1,37 +1,43 @@
 import React from 'react';
 import './EmotionVelocityMonitor.css';
 
-function EmotionVelocityMonitor() {
-  const emotions = [
+function EmotionVelocityMonitor({ data }) {
+  // Use data from props if available, otherwise fallback to default empty state or loading state
+  // But for now, we'll default to a "waiting for data" state if not provided
+  
+  const emotions = data?.monitor_data || [
     {
       name: 'ANGER',
-      multiplier: '+2.4x',
+      multiplier: '0.0x',
       color: 'red',
-      filled: 8,
-      status: 'CRITICAL THRESHOLD BREACHED'
+      filled: 0,
+      status: 'WAITING FOR DATA'
     },
     {
       name: 'FEAR',
-      multiplier: '+1.6x',
+      multiplier: '0.0x',
       color: 'amber',
-      filled: 6,
-      status: 'RISING UNCERTAINTY'
+      filled: 0,
+      status: 'WAITING FOR DATA'
     },
     {
       name: 'NEUTRAL',
-      multiplier: '-0.8x',
+      multiplier: '0.0x',
       color: 'gray',
-      filled: 3,
-      status: 'DECREASING INDIFFERENCE'
+      filled: 0,
+      status: 'WAITING FOR DATA'
     },
     {
       name: 'JOY',
-      multiplier: '-1.2x',
+      multiplier: '0.0x',
       color: 'green',
-      filled: 2,
-      status: 'POSITIVE ENGAGEMENT LOSS'
+      filled: 0,
+      status: 'WAITING FOR DATA'
     }
   ];
+
+  const overallVelocity = data?.overall_velocity || 0;
+  const velocityPercentage = Math.round(overallVelocity * 100);
 
   const renderBarSegments = (filled) => {
     const total = 16;

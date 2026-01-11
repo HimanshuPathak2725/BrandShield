@@ -98,7 +98,6 @@ function AspectCards({ findings = [] }) {
     <section className="aspect-section">
       <div className="aspect-header">
         <h3 className="aspect-title">What People Are Talking About</h3>
-        <button className="view-all-btn">View All Aspects</button>
       </div>
 
       <div className="aspect-grid">

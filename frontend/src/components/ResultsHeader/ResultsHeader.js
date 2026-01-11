@@ -12,7 +12,7 @@ function ResultsHeader({ brand }) {
             <h1 className="logo-text">BrandShield AI</h1>
           </Link>
           <div className="header-divider"></div>
-          <p className="page-title">AI Crisis Analysis Dashboard</p>
+          <p className="page-title">Dashboard</p>
         </div>
 
         <div className="header-right">

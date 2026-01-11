@@ -86,6 +86,8 @@ function AnalysisForm() {
             <FaExclamationTriangle /> {error}
           </div>
         )}
+        
+        {/* adding a space in search input and brand name */}
 
         <form onSubmit={handleSubmit} className="analysis-form">
           <div className="form-group">

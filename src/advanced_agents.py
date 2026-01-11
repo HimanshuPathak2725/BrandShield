@@ -43,6 +43,75 @@ def analyze_emotions(filtered_content: List[Dict[str, Any]]) -> Dict[str, Any]:
     avg_neutral = np.mean(emotions['neutral']) if emotions['neutral'] else 0
     avg_joy = np.mean(emotions['joy']) if emotions['joy'] else 0
     
+    # --- Velocity Calculation ---
+    # Split content into recent (last 12h) vs older to track change
+    current_time = datetime.now().timestamp()
+    recent_limit = current_time - (12 * 3600)
+    
+    recent_scores = {'anger': [], 'fear': [], 'neutral': [], 'joy': []}
+    past_scores = {'anger': [], 'fear': [], 'neutral': [], 'joy': []}
+    
+    for item in filtered_content:
+        text = item.get('text', '')[:512]
+        scores = vader.polarity_scores(text)
+        is_recent = item.get('published_timestamp', 0) > recent_limit
+        
+        target = recent_scores if is_recent else past_scores
+        target['anger'].append(scores['neg'])
+        target['neutral'].append(scores['neu'])
+        target['joy'].append(scores['pos'])
+        # VADER doesn't have fear, approximate it (e.g. low compound + high neg)
+        fear_score = scores['neg'] * 0.5 if scores['compound'] < -0.3 else 0
+        target['fear'].append(fear_score)
+
+    def calculate_velocity(emotion_name, recent, past):
+        avg_recent = np.mean(recent) if recent else 0
+        avg_past = np.mean(past) if past else 0
+        if avg_past == 0: return 0 if avg_recent == 0 else 100
+        return ((avg_recent - avg_past) / avg_past) * 100
+
+    velocities = {
+        'anger': calculate_velocity('anger', recent_scores['anger'], past_scores['anger']),
+        'fear': calculate_velocity('fear', recent_scores['fear'], past_scores['fear']),
+        'neutral': calculate_velocity('neutral', recent_scores['neutral'], past_scores['neutral']),
+        'joy': calculate_velocity('joy', recent_scores['joy'], past_scores['joy']),
+    }
+
+    # Format for Monitor Component
+    monitor_data = [
+        {
+            'name': 'ANGER',
+            'multiplier': f"{'+' if velocities['anger'] > 0 else ''}{velocities['anger']/100:.1f}x",
+            'color': 'red',
+            'filled': min(16, int(avg_anger * 20)), # Scale 0-1 to 0-16
+            'status': 'CRITICAL THRESHOLD BREACHED' if avg_anger > 0.5 else 'RISING TENSION' if velocities['anger'] > 20 else 'STABLE'
+        },
+        {
+            'name': 'FEAR',
+            'multiplier': f"{'+' if velocities['fear'] > 0 else ''}{velocities['fear']/100:.1f}x",
+            'color': 'amber',
+            'filled': min(16, int(np.mean([x for x in recent_scores['fear'] + past_scores['fear']] or [0]) * 20)),
+            'status': 'UNCERTAINTY'
+        },
+        {
+            'name': 'NEUTRAL',
+            'multiplier': f"{'+' if velocities['neutral'] > 0 else ''}{velocities['neutral']/100:.1f}x",
+            'color': 'gray',
+            'filled': min(16, int(avg_neutral * 16)),
+            'status': 'INDIFFERENCE'
+        },
+        {
+            'name': 'JOY',
+            'multiplier': f"{'+' if velocities['joy'] > 0 else ''}{velocities['joy']/100:.1f}x",
+            'color': 'green',
+            'filled': min(16, int(avg_joy * 16)),
+            'status': 'ENGAGEMENT'
+        }
+    ]
+
+    # Overall Velocity Index (Weighted average of absolute changes)
+    overall_velocity = (abs(velocities['anger']) * 0.5 + abs(velocities['fear']) * 0.3 + abs(velocities['joy']) * 0.2) / 100
+
     # Determine dominant emotion
     emotion_map = {
         'anger': avg_anger,
@@ -75,7 +144,9 @@ def analyze_emotions(filtered_content: List[Dict[str, Any]]) -> Dict[str, Any]:
         'velocity': {'anger_velocity': 0, 'sadness_velocity': 0},
         'danger_score': danger_score,
         'trend_analysis': trend_analysis,
-        'viral_risk': viral_risk
+        'viral_risk': viral_risk,
+        'monitor_data': monitor_data,
+        'overall_velocity': overall_velocity
     }
 
 

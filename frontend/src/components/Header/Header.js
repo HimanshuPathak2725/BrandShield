@@ -56,52 +56,6 @@ function Header() {
         </Link>
         
         <nav className="nav-links">
-          {!user ? (
-            <Link to="/auth" className="nav-link" style={{ textDecoration: 'none' }}>Login/Signup</Link>
-          ) : (
-            <div className="user-menu" style={{ position: 'relative' }}>
-              <button 
-                className="nav-link user-button" 
-                onClick={() => setShowDropdown(!showDropdown)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                {user.name || user.email} <FaChevronDown size={12} />
-              </button>
-              
-              {showDropdown && (
-                <div className="dropdown-menu" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '0.5rem',
-                  background: '#1a1f3a',
-                  border: '1px solid #2d3561',
-                  borderRadius: '0.5rem',
-                  minWidth: '150px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                  zIndex: 1000
-                }}>
-                  <button 
-                    onClick={handleLogout}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      background: 'none',
-                      border: 'none',
-                      color: '#fff',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem'
-                    }}
-                    onMouseEnter={(e) => e.target.style.background = '#2d3561'}
-                    onMouseLeave={(e) => e.target.style.background = 'none'}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </nav>
         
         <Link to="/dashboard" className="cta-button" style={{ textDecoration: 'none' }}>Start Analysis</Link>
