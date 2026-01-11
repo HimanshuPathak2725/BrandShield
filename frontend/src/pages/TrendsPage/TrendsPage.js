@@ -30,21 +30,38 @@ function TrendsPage() {
   };
 
   // Use real data if available, otherwise use defaults
-  const aspects = trendsData?.aspects || [
+  // Convert aspects object to array if needed
+  let aspects = [
     { name: 'Design', sentiment: { positive: 82, neutral: 12, negative: 6 }, themes: { positive: [], negative: [] } },
     { name: 'Price', sentiment: { positive: 45, neutral: 30, negative: 25 }, themes: { positive: [], negative: [] } },
     { name: 'Performance', sentiment: { positive: 74, neutral: 16, negative: 10 }, themes: { positive: [], negative: [] } },
     { name: 'UX & Comfort', sentiment: { positive: 61, neutral: 20, negative: 19 }, themes: { positive: [], negative: [] } },
   ];
 
-  const sentimentData = aspects.map(aspect => ({
-    aspect: aspect.name,
-    positive: aspect.sentiment.positive,
-    neutral: aspect.sentiment.neutral,
-    negative: aspect.sentiment.negative
-  }));
+  // If trendsData has aspects, process them
+  if (trendsData?.aspects) {
+    if (Array.isArray(trendsData.aspects)) {
+      aspects = trendsData.aspects;
+    } else {
+      // Convert object to array
+      aspects = Object.entries(trendsData.aspects).map(([brand, sentiment]) => ({
+        name: brand,
+        sentiment: sentiment,
+        themes: { positive: [], negative: [] }
+      }));
+    }
+  }
 
-  const currentAspect = aspects.find(a => a.name === 'Design') || aspects[0];
+  const sentimentData = Array.isArray(aspects) ? aspects.map(aspect => ({
+    aspect: aspect.name,
+    positive: aspect.sentiment?.positive || 0,
+    neutral: aspect.sentiment?.neutral || 0,
+    negative: aspect.sentiment?.negative || 0
+  })) : [];
+
+  const currentAspect = Array.isArray(aspects) && aspects.length > 0 
+    ? (aspects.find(a => a.name === 'Design') || aspects[0])
+    : { name: 'Design', sentiment: { positive: 82, neutral: 12, negative: 6 }, themes: { positive: [], negative: [] } };
   
   const positiveThemes = currentAspect.themes?.positive || [
     { text: 'Sleek side profile', count: 244 },
@@ -300,9 +317,13 @@ function TrendsPage() {
                       </span>
                     </td>
                     <td className="comment-sentiment">
-                      <div className={`sentiment-badge ${comment.sentiment}`}>
+                      <div className={`sentiment-badge ${comment.sentiment || 'neutral'}`}>
                         <span className="sentiment-icon">{getSentimentIcon(comment.sentiment)}</span>
-                        <span className="sentiment-text">{comment.sentiment.charAt(0).toUpperCase() + comment.sentiment.slice(1)}</span>
+                        <span className="sentiment-text">
+                          {comment.sentiment 
+                            ? comment.sentiment.charAt(0).toUpperCase() + comment.sentiment.slice(1)
+                            : 'Neutral'}
+                        </span>
                       </div>
                     </td>
                     <td className="comment-time">{comment.timestamp}</td>

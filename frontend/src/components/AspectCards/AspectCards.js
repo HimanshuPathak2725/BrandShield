@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaPalette, FaCreditCard, FaBolt, FaBatteryFull, FaTag, FaBullhorn, FaBoxOpen } from 'react-icons/fa';
+import { FaPalette, FaCreditCard, FaBolt, FaBatteryFull, FaTag, FaBullhorn, FaBoxOpen, FaExclamationTriangle, FaBug, FaShieldAlt } from 'react-icons/fa';
 import './AspectCards.css';
 
 function AspectCards({ findings = [] }) {
@@ -7,6 +7,10 @@ function AspectCards({ findings = [] }) {
   // Map parsed categories to icons
   const getIconForCategory = (category = '') => {
     const cat = category.toLowerCase();
+    if (cat.includes('hate') || cat.includes('speech')) return <FaExclamationTriangle />;
+    if (cat.includes('frustration') || cat.includes('complaint')) return <FaBullhorn />;
+    if (cat.includes('bug') || cat.includes('technical')) return <FaBug />;
+    if (cat.includes('safety') || cat.includes('risk')) return <FaShieldAlt />;
     if (cat.includes('price') || cat.includes('cost')) return <FaCreditCard />;
     if (cat.includes('design') || cat.includes('look')) return <FaPalette />;
     if (cat.includes('perform') || cat.includes('speed')) return <FaBolt />;
@@ -16,25 +20,53 @@ function AspectCards({ findings = [] }) {
     return <FaTag />;
   };
 
-  const getSentimentDetails = (sentimentStr = '') => {
-      const s = sentimentStr.toLowerCase();
-      if (s.includes('positive')) return { status: 'LIKED', color: 'green', pos: 80, neu: 15, neg: 5 };
-      if (s.includes('negative')) return { status: 'DISLIKED', color: 'red', pos: 10, neu: 20, neg: 70 };
-      if (s.includes('mixed')) return { status: 'MIXED', color: 'yellow', pos: 40, neu: 20, neg: 40 };
-      return { status: 'NEUTRAL', color: 'yellow', pos: 20, neu: 60, neg: 20 };
+  const calculateSentimentPercentages = (items = []) => {
+    if (!items || items.length === 0) {
+      return { pos: 20, neu: 60, neg: 20 };
+    }
+    
+    let positive = 0;
+    let negative = 0;
+    let neutral = 0;
+    
+    items.forEach(item => {
+      const sentiment = (item.sentiment_label || '').toLowerCase();
+      if (sentiment.includes('positive')) {
+        positive++;
+      } else if (sentiment.includes('negative')) {
+        negative++;
+      } else {
+        neutral++;
+      }
+    });
+    
+    const total = items.length;
+    return {
+      pos: Math.round((positive / total) * 100),
+      neu: Math.round((neutral / total) * 100),
+      neg: Math.round((negative / total) * 100)
+    };
+  };
+
+  const getOverallStatus = (percentages) => {
+    if (percentages.neg >= 50) return { status: 'NEUTRAL', color: 'red' };
+    if (percentages.pos >= 50) return { status: 'NEUTRAL', color: 'green' };
+    return { status: 'NEUTRAL', color: 'yellow' };
   };
 
   const aspects = findings.map((f, idx) => {
-      const details = getSentimentDetails(f.sentiment);
+      const percentages = calculateSentimentPercentages(f.items);
+      const status = getOverallStatus(percentages);
+      
       return {
           id: idx,
-          name: f.category,
+          name: f.category || 'Unknown',
           icon: getIconForCategory(f.category),
-          status: details.status,
-          pos: details.pos,
-          neu: details.neu,
-          neg: details.neg,
-          color: details.color
+          status: status.status,
+          pos: percentages.pos,
+          neu: percentages.neu,
+          neg: percentages.neg,
+          color: status.color
       };
   });
 

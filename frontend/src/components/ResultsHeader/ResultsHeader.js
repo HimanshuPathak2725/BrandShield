@@ -31,14 +31,13 @@ function ResultsHeader({ brand }) {
             className="platform-btn"
             style={{
               padding: '8px 16px',
-              backgroundColor: '#e8eaed',
-              color: '#1f2937',
-              border: '1px solid #ddd',
+              backgroundColor: '#4285F4',
+              color: 'white',
+              border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
               marginRight: '12px',
-              textDecoration: 'none',
-              color: 'inherit'
+              textDecoration: 'none'
             }}
           >
             ← Home
@@ -49,13 +48,12 @@ function ResultsHeader({ brand }) {
             className="platform-btn"
             style={{
               padding: '8px 16px',
-              backgroundColor: '#f8f9fa',
-              color: '#1f2937',
-              border: '1px solid #ddd',
+              backgroundColor: '#4285F4',
+              color: 'white',
+              border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
-              textDecoration: 'none',
-              color: 'inherit'
+              textDecoration: 'none'
             }}
           >
             + New Analysis
