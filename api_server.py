@@ -23,8 +23,16 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'brandshield-secret-key-dev')
-# Allow CORS for all domains on all routes, supports credentials
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# Configure CORS with explicit settings
+CORS(app, 
+     resources={r"/*": {
+         "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "supports_credentials": True,
+         "expose_headers": ["Content-Type"]
+     }})
 
 # File to store users
 USERS_FILE = 'users.json'
@@ -46,10 +54,16 @@ def save_users(users):
 analysis_sessions = {}
 analysis_history = []  # Store all analyses with timestamps
 
-@app.route('/api/auth/register', methods=['POST'])
+@app.route('/api/auth/register', methods=['POST', 'OPTIONS'])
 def register():
+    if request.method == 'OPTIONS':
+        return '', 204
+    
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
         email = data.get('email')
         password = data.get('password')
         name = data.get('name')
@@ -87,12 +101,20 @@ def register():
 
     except Exception as e:
         print(f"Registration error: {e}")
-        return jsonify({'error': 'Registration failed'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
-@app.route('/api/auth/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
         email = data.get('email')
         password = data.get('password')
 
@@ -119,7 +141,9 @@ def login():
 
     except Exception as e:
         print(f"Login error: {e}")
-        return jsonify({'error': 'Login failed'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
 @app.route('/api/auth/me', methods=['GET'])
 def check_auth():
@@ -141,7 +165,17 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'service': 'BrandShield AI API',
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'cors': 'enabled'
+    })
+
+@app.route('/api/test', methods=['GET', 'POST'])
+def test_endpoint():
+    """Test endpoint for debugging"""
+    return jsonify({
+        'message': 'API is working',
+        'method': request.method,
+        'timestamp': datetime.now().isoformat()
     })
 
 @app.route('/api/analyze', methods=['POST'])

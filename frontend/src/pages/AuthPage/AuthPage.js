@@ -36,12 +36,15 @@ function AuthPage() {
     setError('');
 
     try {
+      console.log('Attempting login to:', `${API_BASE_URL}/api/auth/login`);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({
           email: formData.email,
           password: formData.password
@@ -49,6 +52,7 @@ function AuthPage() {
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
@@ -61,8 +65,12 @@ function AuthPage() {
       // Navigate to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
       console.error('Login error:', err);
+      if (err.message === 'Failed to fetch') {
+        setError('Cannot connect to server. Please make sure the API server is running on http://localhost:5000');
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -88,12 +96,15 @@ function AuthPage() {
     }
 
     try {
+      console.log('Attempting registration to:', `${API_BASE_URL}/api/auth/register`);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -103,6 +114,7 @@ function AuthPage() {
       });
 
       const data = await response.json();
+      console.log('Registration response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
@@ -115,8 +127,12 @@ function AuthPage() {
       // Navigate to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
       console.error('Registration error:', err);
+      if (err.message === 'Failed to fetch') {
+        setError('Cannot connect to server. Please make sure the API server is running on http://localhost:5000');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
