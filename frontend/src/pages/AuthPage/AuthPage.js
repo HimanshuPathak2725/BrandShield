@@ -178,7 +178,7 @@ function AuthPage() {
       <div className="auth-right-panel">
         {/* Mobile Logo */}
         <div className="auth-logo-mobile">
-          <div className="auth-logo-icon">🛡️</div>
+          <div className="auth-logo-icon"><FaShieldAlt /></div>
           <h2 className="auth-logo-text">BrandShield</h2>
         </div>
 

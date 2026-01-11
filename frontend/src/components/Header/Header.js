@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaChevronDown, FaShieldAlt } from 'react-icons/fa';
 import './Header.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -51,7 +51,7 @@ function Header() {
     <header className="header">
       <div className="header-container">
         <Link to="/" className="logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div className="shield-icon">🛡️</div>
+          <div className="shield-icon"><FaShieldAlt /></div>
           <span className="logo-text">BrandShield</span>
         </Link>
         

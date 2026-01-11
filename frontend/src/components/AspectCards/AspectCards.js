@@ -1,14 +1,56 @@
 import React from 'react';
-import { FaPalette, FaCreditCard, FaBolt, FaBatteryFull } from 'react-icons/fa';
+import { FaPalette, FaCreditCard, FaBolt, FaBatteryFull, FaTag, FaBullhorn, FaBoxOpen } from 'react-icons/fa';
 import './AspectCards.css';
 
-function AspectCards() {
-  const aspects = [
-    { id: 1, name: 'Design', icon: <FaPalette />, status: 'LIKED', pos: 80, neu: 10, neg: 10, color: 'green' },
-    { id: 2, name: 'Price', icon: <FaCreditCard />, status: 'DISLIKED', pos: 20, neu: 20, neg: 60, color: 'red' },
-    { id: 3, name: 'Performance', icon: <FaBolt />, status: 'LIKED', pos: 90, neu: 5, neg: 5, color: 'green' },
-    { id: 4, name: 'Battery', icon: <FaBatteryFull />, status: 'MIXED', pos: 40, neu: 20, neg: 40, color: 'yellow' }
-  ];
+function AspectCards({ findings = [] }) {
+  
+  // Map parsed categories to icons
+  const getIconForCategory = (category = '') => {
+    const cat = category.toLowerCase();
+    if (cat.includes('price') || cat.includes('cost')) return <FaCreditCard />;
+    if (cat.includes('design') || cat.includes('look')) return <FaPalette />;
+    if (cat.includes('perform') || cat.includes('speed')) return <FaBolt />;
+    if (cat.includes('battery') || cat.includes('power')) return <FaBatteryFull />;
+    if (cat.includes('market') || cat.includes('ad')) return <FaBullhorn />;
+    if (cat.includes('product') || cat.includes('quality')) return <FaBoxOpen />;
+    return <FaTag />;
+  };
+
+  const getSentimentDetails = (sentimentStr = '') => {
+      const s = sentimentStr.toLowerCase();
+      if (s.includes('positive')) return { status: 'LIKED', color: 'green', pos: 80, neu: 15, neg: 5 };
+      if (s.includes('negative')) return { status: 'DISLIKED', color: 'red', pos: 10, neu: 20, neg: 70 };
+      if (s.includes('mixed')) return { status: 'MIXED', color: 'yellow', pos: 40, neu: 20, neg: 40 };
+      return { status: 'NEUTRAL', color: 'yellow', pos: 20, neu: 60, neg: 20 };
+  };
+
+  const aspects = findings.map((f, idx) => {
+      const details = getSentimentDetails(f.sentiment);
+      return {
+          id: idx,
+          name: f.category,
+          icon: getIconForCategory(f.category),
+          status: details.status,
+          pos: details.pos,
+          neu: details.neu,
+          neg: details.neg,
+          color: details.color
+      };
+  });
+
+  // Fallback if no real data
+  if (aspects.length === 0) {
+      return (
+        <section className="aspect-section">
+             <div className="aspect-header">
+                <h3 className="aspect-title">Key Discussions</h3>
+             </div>
+             <div style={{padding: '20px', color: '#6b7280', textAlign: 'center'}}>
+                 No specific aspect data found in this analysis.
+             </div>
+        </section>
+      );
+  }
 
   const getStatusColor = (color) => {
     const colors = {
@@ -18,6 +60,7 @@ function AspectCards() {
     };
     return colors[color] || '';
   };
+
 
   return (
     <section className="aspect-section">

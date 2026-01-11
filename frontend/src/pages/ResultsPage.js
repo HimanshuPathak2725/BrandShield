@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaBrain } from 'react-icons/fa';
+import { FaBrain, FaHourglassHalf, FaArrowLeft } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import ResultsHeader from '../components/ResultsHeader/ResultsHeader';
 import SentimentScore from '../components/SentimentScore/SentimentScore';
 import TrendWidget from '../components/TrendWidget/TrendWidget';
@@ -16,7 +17,11 @@ function ResultsPage() {
     // Load analysis data from localStorage
     const data = localStorage.getItem('currentAnalysis');
     if (data) {
-      setAnalysisData(JSON.parse(data));
+      try {
+        setAnalysisData(JSON.parse(data));
+      } catch (e) {
+        console.error("Failed to parse analysis data", e);
+      }
     }
     setLoading(false);
   }, []);
@@ -29,9 +34,10 @@ function ResultsPage() {
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
-          fontSize: '1.5rem'
+          fontSize: '1.5rem',
+          color: '#e2e8f0'
         }}>
-          ⏳ Loading AI Analysis...
+          <FaHourglassHalf className="loading-icon" style={{marginRight: '10px'}} /> Loading AI Analysis...
         </div>
       </div>
     );
@@ -40,19 +46,13 @@ function ResultsPage() {
   if (!analysisData) {
     return (
       <div className="results-page">
-        <ResultsHeader />
-        <main className="results-main">
-          <div className="results-container">
-            <section className="results-row">
-              <SentimentScore />
-              <TrendWidget />
-            </section>
-
-            <AspectCards />
-            <TopOpinions />
-            <AIInsight />
-          </div>
-        </main>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'white' }}>
+            <h2>No analysis data found</h2>
+            <p>Please start a new analysis from the dashboard.</p>
+            <Link to="/dashboard" className="btn-primary" style={{ marginTop: '1rem', display: 'inline-block', textDecoration: 'none' }}>
+                <FaArrowLeft style={{ marginRight: '0.5rem' }}/> Go to Dashboard
+            </Link>
+        </div>
       </div>
     );
   }
@@ -101,11 +101,11 @@ function ResultsPage() {
       <main className="results-main">
         <div className="results-container">
           <section className="results-row">
-            <SentimentScore data={analysisData} />
-            <TrendWidget />
+            <SentimentScore data={analysisData.sentiment_stats} />
+            <TrendWidget data={analysisData.risk_metrics} />
           </section>
 
-          <AspectCards />
+          <AspectCards findings={analysisData.rag_findings} />
           <TopOpinions positiveOpinions={positiveOpinions.slice(0, 3)} negativeOpinions={negativeOpinions.slice(0, 3)} />
           <AIInsight data={analysisData} />
           

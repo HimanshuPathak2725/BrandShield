@@ -81,7 +81,7 @@ def get_llm(
     """
     
     # Try Gemini first if available
-    if GEMINI_AVAILABLE and os.getenv("GEMINI_API_KEY") and False:  # Temporarily disabled
+    if GEMINI_AVAILABLE and os.getenv("GEMINI_API_KEY"):
         try:
             llm = GeminiLLM(
                 temperature=temperature,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaSmile, FaFrown, FaMeh, FaChevronDown, FaChartLine, FaChartBar, FaComments, FaBrain } from 'react-icons/fa';
+import { FaSmile, FaFrown, FaMeh, FaChevronDown, FaChartLine, FaChartBar, FaComments, FaBrain, FaCog, FaInfoCircle, FaDownload } from 'react-icons/fa';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './TrendsPage.css';
 
@@ -71,13 +71,13 @@ function TrendsPage() {
   const getSentimentIcon = (sentiment) => {
     switch (sentiment) {
       case 'positive':
-        return '😊';
+        return <FaSmile />;
       case 'negative':
-        return '😞';
+        return <FaFrown />;
       case 'neutral':
-        return '😐';
+        return <FaMeh />;
       default:
-        return '😐';
+        return <FaMeh />;
     }
   };
 
@@ -110,7 +110,7 @@ function TrendsPage() {
               <button className={`time-btn ${activeTimeRange === '1year' ? 'active' : ''}`} onClick={() => setActiveTimeRange('1year')}>1 Year</button>
             </div>
             <button className="ai-settings-btn">
-              <span className="settings-icon">⚙️</span>
+              <span className="settings-icon"><FaCog /></span>
               AI Settings
             </button>
           </div>
@@ -143,7 +143,7 @@ function TrendsPage() {
                 <h3 className="card-title">Sentiment Distribution</h3>
                 <p className="card-subtitle">Net positive score: <span className="positive-score">+62%</span></p>
               </div>
-              <span className="info-icon">ℹ️</span>
+              <span className="info-icon"><FaInfoCircle /></span>
             </div>
 
             <div className="sentiment-bars">
@@ -294,7 +294,7 @@ function TrendsPage() {
             <div className="ai-actions">
               <button className="ai-button primary-ai-btn">
                 Generate Report
-                <span className="download-icon">⬇️</span>
+                <span className="download-icon"><FaDownload /></span>
               </button>
               <button className="ai-button secondary-ai-btn">Ask AI Assistant</button>
             </div>

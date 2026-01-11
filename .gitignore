@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+users.json
 *.py[cod]
 *$py.class
 *.so

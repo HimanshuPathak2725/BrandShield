@@ -2,11 +2,15 @@
 BrandShield API Server
 Flask-based REST API for AI Crisis Prediction
 """
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import os
 import sys
+import json
+import uuid
+from datetime import datetime
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -18,10 +22,113 @@ from src.state import AgentState
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+app.secret_key = os.getenv('SECRET_KEY', 'brandshield-secret-key-dev')
+# Allow CORS for all domains on all routes, supports credentials
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# File to store users
+USERS_FILE = 'users.json'
+
+def load_users():
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, indent=2)
 
 # In-memory storage for analysis sessions (replace with DB in production)
 analysis_sessions = {}
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        name = data.get('name')
+        company = data.get('company', '')
+
+        if not email or not password or not name:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        users = load_users()
+        
+        if email in users:
+            return jsonify({'error': 'User already exists'}), 400
+
+        user_id = str(uuid.uuid4())
+        new_user = {
+            'id': user_id,
+            'email': email,
+            'password': generate_password_hash(password),
+            'name': name,
+            'company': company,
+            'created_at': datetime.now().isoformat(),
+            'last_login': None
+        }
+
+        users[email] = new_user
+        save_users(users)
+
+        # Return user info (excluding password)
+        user_response = {k: v for k, v in new_user.items() if k != 'password'}
+        return jsonify({'message': 'Registration successful', 'user': user_response}), 201
+
+    except Exception as e:
+        print(f"Registration error: {e}")
+        return jsonify({'error': 'Registration failed'}), 500
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return jsonify({'error': 'Missing email or password'}), 400
+
+        users = load_users()
+        
+        if email not in users:
+            return jsonify({'error': 'Invalid credentials'}), 401
+            
+        user = users[email]
+        
+        if not check_password_hash(user.get('password'), password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+
+        # Update last login
+        user['last_login'] = datetime.now().isoformat()
+        save_users(users)
+        
+        user_response = {k: v for k, v in user.items() if k != 'password'}
+        session['user'] = user_response
+        return jsonify({'message': 'Login successful', 'user': user_response}), 200
+
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'error': 'Login failed'}), 500
+
+@app.route('/api/auth/me', methods=['GET'])
+def check_auth():
+    """Check authentication status"""
+    user = session.get('user')
+    if user:
+        return jsonify({'authenticated': True, 'user': user}), 200
+    return jsonify({'authenticated': False}), 401
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """Logout user"""
+    session.pop('user', None)
+    return jsonify({'message': 'Logged out'}), 200
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

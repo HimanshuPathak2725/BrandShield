@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaCalendar, FaBullhorn, FaChartLine, FaChartBar, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaCalendar, FaBullhorn, FaChartLine, FaChartBar, FaExternalLinkAlt, FaChevronRight, FaPalette, FaBrain, FaShieldAlt, FaGlobe } from 'react-icons/fa';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
@@ -218,7 +218,7 @@ function InsightsPage() {
                       />
                     </svg>
                   </div>
-                  <span className="aspect-chevron">→</span>
+                  <span className="aspect-chevron"><FaChevronRight /></span>
                 </div>
               ))}
             </div>
@@ -229,7 +229,7 @@ function InsightsPage() {
             <div className="deep-dive-header">
               <div className="header-left">
                 <div className="icon-box">
-                  <span className="icon">🎨</span>
+                  <span className="icon"><FaPalette /></span>
                 </div>
                 <div>
                   <h5 className="deep-dive-title">Performance Deep-Dive: Design</h5>
@@ -274,7 +274,7 @@ function InsightsPage() {
         <div className="ai-section">
           <div className="ai-content">
             <div className="ai-icon-circle">
-              <span className="ai-icon">🧠</span>
+              <span className="ai-icon"><FaBrain /></span>
             </div>
             <div className="ai-text">
               <div className="ai-header">
@@ -294,7 +294,7 @@ function InsightsPage() {
       {/* Footer */}
       <footer className="insights-footer">
         <div className="footer-left">
-          <div className="footer-logo">🛡️</div>
+          <div className="footer-logo"><FaShieldAlt /></div>
           <span className="footer-text">BrandShield Intelligence © 2023</span>
         </div>
         <div className="footer-links">
@@ -307,7 +307,7 @@ function InsightsPage() {
         <div className="footer-region">
           <span className="region-label">Region:</span>
           <div className="region-badge">
-            <span className="region-icon">🌐</span>
+            <span className="region-icon"><FaGlobe /></span>
             Global (US-West)
           </div>
         </div>

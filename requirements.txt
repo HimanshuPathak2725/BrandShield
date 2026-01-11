@@ -30,6 +30,7 @@ plotly==5.24.1
 # API Server
 flask==3.0.0
 flask-cors==4.0.0
+Werkzeug>=3.0.0
 
 # Utilities
 python-dotenv==1.0.1
