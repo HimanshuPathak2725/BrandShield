@@ -1,0 +1,227 @@
+.digital-twin-section {
+  grid-column: span 12;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.digital-twin-title {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.simulation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.simulation-card {
+  background-color: #1c1f33;
+  border: 1px solid #232648;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.simulation-card.glass-panel {
+  background: rgba(28, 31, 51, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(35, 38, 72, 0.8);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: #9296c9;
+}
+
+.card-title {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Public Reaction Card */
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: #9296c9;
+}
+
+.metric-value {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: white;
+}
+
+.progress-bar {
+  height: 0.25rem;
+  width: 100%;
+  background-color: #1a1c32;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #22c55e;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.emotion-section {
+  padding-top: 0.5rem;
+}
+
+.emotion-label {
+  font-size: 0.625rem;
+  color: #9296c9;
+  text-transform: uppercase;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.emotion-text {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Media Reaction Card */
+.coverage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.coverage-label {
+  font-size: 0.625rem;
+  color: #9296c9;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.coverage-bars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.coverage-bar {
+  flex: 1;
+  height: 0.375rem;
+  border-radius: 9999px;
+}
+
+.coverage-bar.filled {
+  background-color: #1224e2;
+}
+
+.coverage-bar.empty {
+  background-color: rgba(18, 36, 226, 0.2);
+}
+
+.narrative-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.narrative-label {
+  font-size: 0.625rem;
+  color: #9296c9;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.narrative-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.narrative-item {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: white;
+}
+
+.bullet {
+  color: #1224e2;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Competitor Reaction Card */
+.action-box {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+}
+
+.action-box.target-move {
+  background-color: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.1);
+}
+
+.action-box.defensive-action {
+  background-color: #1c1f33;
+  border-color: #232648;
+}
+
+.action-label {
+  font-size: 0.625rem;
+  color: #9296c9;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin: 0 0 0.25rem 0;
+}
+
+.action-box.target-move .action-label {
+  color: #f87171;
+}
+
+.action-text {
+  font-size: 0.75rem;
+  color: white;
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .simulation-grid {
+    grid-template-columns: 1fr;
+  }
+}

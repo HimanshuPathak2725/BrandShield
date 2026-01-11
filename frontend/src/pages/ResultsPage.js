@@ -6,6 +6,8 @@ import SentimentScore from '../components/SentimentScore/SentimentScore';
 import TrendWidget from '../components/TrendWidget/TrendWidget';
 import AspectCards from '../components/AspectCards/AspectCards';
 import TopOpinions from '../components/TopOpinions/TopOpinions';
+import ResponseStrategies from '../components/ResponseStrategies/ResponseStrategies';
+import DigitalTwinSimulation from '../components/DigitalTwinSimulation/DigitalTwinSimulation';
 import AIInsight from '../components/AIInsight/AIInsight';
 import './ResultsPage.css';
 
@@ -107,6 +109,8 @@ function ResultsPage() {
 
           <AspectCards findings={analysisData.rag_findings} />
           <TopOpinions positiveOpinions={positiveOpinions.slice(0, 3)} negativeOpinions={negativeOpinions.slice(0, 3)} />
+          <ResponseStrategies />
+          <DigitalTwinSimulation />
           <AIInsight data={analysisData} />
           
           {/* Display AI Findings */}
