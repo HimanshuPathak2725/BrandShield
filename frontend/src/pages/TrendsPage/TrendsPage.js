@@ -1,41 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSmile, FaFrown, FaMeh, FaChevronDown, FaChartLine, FaChartBar, FaComments, FaBrain, FaCog, FaInfoCircle, FaDownload } from 'react-icons/fa';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './TrendsPage.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function TrendsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeTimeRange, setActiveTimeRange] = useState('30days');
+  const [trendsData, setTrendsData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const aspects = [
-    { id: 'overview', label: 'Overview', hasLabel: false },
-    { id: 'design', label: 'Design', hasLabel: true, labelText: 'Focus' },
-    { id: 'price', label: 'Price', hasLabel: false },
-    { id: 'performance', label: 'Performance', hasLabel: false },
-    { id: 'ux', label: 'UX & Comfort', hasLabel: false },
+  useEffect(() => {
+    fetchTrends();
+  }, [activeTimeRange]);
+
+  const fetchTrends = async () => {
+    try {
+      setLoading(true);
+      const days = activeTimeRange === '30days' ? 30 : activeTimeRange === '90days' ? 90 : 365;
+      const response = await fetch(`${API_BASE_URL}/api/trends?days=${days}`);
+      const data = await response.json();
+      setTrendsData(data);
+    } catch (error) {
+      console.error('Error fetching trends:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use real data if available, otherwise use defaults
+  const aspects = trendsData?.aspects || [
+    { name: 'Design', sentiment: { positive: 82, neutral: 12, negative: 6 }, themes: { positive: [], negative: [] } },
+    { name: 'Price', sentiment: { positive: 45, neutral: 30, negative: 25 }, themes: { positive: [], negative: [] } },
+    { name: 'Performance', sentiment: { positive: 74, neutral: 16, negative: 10 }, themes: { positive: [], negative: [] } },
+    { name: 'UX & Comfort', sentiment: { positive: 61, neutral: 20, negative: 19 }, themes: { positive: [], negative: [] } },
   ];
 
-  const sentimentData = [
-    { aspect: 'Design', positive: 82, neutral: 12, negative: 6 },
-    { aspect: 'Price', positive: 45, neutral: 30, negative: 25 },
-    { aspect: 'Performance', positive: 74, neutral: 16, negative: 10 },
-    { aspect: 'UX & Comfort', positive: 61, neutral: 20, negative: 19 },
-  ];
+  const sentimentData = aspects.map(aspect => ({
+    aspect: aspect.name,
+    positive: aspect.sentiment.positive,
+    neutral: aspect.sentiment.neutral,
+    negative: aspect.sentiment.negative
+  }));
 
-  const positiveThemes = [
+  const currentAspect = aspects.find(a => a.name === 'Design') || aspects[0];
+  
+  const positiveThemes = currentAspect.themes?.positive || [
     { text: 'Sleek side profile', count: 244 },
     { text: 'Minimalist interior', count: 189 },
     { text: 'Headlight signature', count: 112 },
     { text: 'Wheel design', count: 94 },
   ];
 
-  const negativeThemes = [
+  const negativeThemes = currentAspect.themes?.negative || [
     { text: 'Front grill size', count: 112 },
     { text: 'Plastic dash trim', count: 76 },
     { text: 'Rear visibility', count: 43 },
   ];
 
-  const comments = [
+  const comments = trendsData?.recentComments || [
     {
       text: '"The side profile of the new model is absolutely stunning. They finally got the proportions right. It looks much faster than it actually is."',
       aspect: 'Design',
@@ -66,6 +90,20 @@ function TrendsPage() {
       sentiment: 'positive',
       timestamp: '2 hours ago',
     },
+  ];
+
+  const totalComments = trendsData?.totalComments || 14242;
+  const totalSessions = trendsData?.totalSessions || 0;
+  const dataSourceText = totalSessions > 0 
+    ? `Analyzing ${totalComments} comments from ${totalSessions} brand analyses over the last ${activeTimeRange === '30days' ? '30' : activeTimeRange === '90days' ? '90' : '365'} days`
+    : `Analyzing ${totalComments} public comments across key product dimensions from last ${activeTimeRange === '30days' ? '30' : activeTimeRange === '90days' ? '90' : '365'} days`;
+
+  const aspectsList = [
+    { id: 'overview', label: 'Overview', hasLabel: false },
+    { id: 'design', label: 'Design', hasLabel: true, labelText: 'Focus' },
+    { id: 'price', label: 'Price', hasLabel: false },
+    { id: 'performance', label: 'Performance', hasLabel: false },
+    { id: 'ux', label: 'UX & Comfort', hasLabel: false },
   ];
 
   const getSentimentIcon = (sentiment) => {
@@ -101,7 +139,7 @@ function TrendsPage() {
         <div className="trends-heading">
           <div>
             <h1 className="trends-title">Aspect-Level Public Sentiment Analysis</h1>
-            <p className="trends-subtitle">Analyzing 14,242 public comments across key product dimensions from last 30 days</p>
+            <p className="trends-subtitle">{dataSourceText}</p>
           </div>
           <div className="trends-controls">
             <div className="time-range-buttons">
@@ -118,7 +156,7 @@ function TrendsPage() {
 
         {/* Tabs */}
         <div className="trends-tabs">
-          {aspects.map((aspect) => (
+          {aspectsList.map((aspect) => (
             <a
               key={aspect.id}
               href={`#${aspect.id}`}

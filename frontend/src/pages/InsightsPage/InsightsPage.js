@@ -1,26 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCalendar, FaBullhorn, FaChartLine, FaChartBar, FaExternalLinkAlt, FaChevronRight, FaPalette, FaBrain, FaShieldAlt, FaGlobe } from 'react-icons/fa';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader';
 import './InsightsPage.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function InsightsPage() {
   const [activeTimeRange, setActiveTimeRange] = useState('7d');
   const [activeAspect, setActiveAspect] = useState('design');
+  const [insightsData, setInsightsData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const aspects = [
-    { id: 'design', label: 'Product Design', mentions: 642, trend: 'up' },
-    { id: 'price', label: 'Price & Value', mentions: 412, trend: 'neutral' },
-    { id: 'performance', label: 'Performance', mentions: 891, trend: 'up' },
-    { id: 'ux', label: 'User Experience', mentions: 225, trend: 'down' },
+  useEffect(() => {
+    fetchInsights();
+  }, [activeTimeRange]);
+
+  const fetchInsights = async () => {
+    try {
+      setLoading(true);
+      const days = activeTimeRange === '24h' ? 1 : activeTimeRange === '7d' ? 7 : 30;
+      const response = await fetch(`${API_BASE_URL}/api/insights?days=${days}`);
+      const data = await response.json();
+      setInsightsData(data);
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use real data if available, otherwise use defaults
+  const aspects = insightsData?.dataPoints?.[0]?.aspects || [
+    { name: 'Product Design', mentions: 642, trend: 'up' },
+    { name: 'Price & Value', mentions: 412, trend: 'neutral' },
+    { name: 'Performance', mentions: 891, trend: 'up' },
+    { name: 'User Experience', mentions: 225, trend: 'down' },
   ];
+
+  const momentum = insightsData?.momentum || {
+    positive: 12.4,
+    negative: -2.1,
+    stability: 88
+  };
 
   const momentumCards = [
-    { label: 'Positive Momentum', value: '+12.4%', change: '+5.2%', changeType: 'up', percentage: 75 },
-    { label: 'Negative Momentum', value: '-2.1%', change: '0.8%', changeType: 'down', percentage: 15 },
-    { label: 'Stability Index', value: '88%', change: '+1.5%', changeType: 'up', percentage: 88 },
+    { label: 'Positive Momentum', value: `+${momentum.positive.toFixed(1)}%`, change: '+5.2%', changeType: 'up', percentage: 75 },
+    { label: 'Negative Momentum', value: `${momentum.negative.toFixed(1)}%`, change: '0.8%', changeType: 'down', percentage: 15 },
+    { label: 'Stability Index', value: `${momentum.stability}%`, change: '+1.5%', changeType: 'up', percentage: momentum.stability },
   ];
+
+  const totalDataPoints = insightsData?.totalSessions || 0;
+  const dataPointsText = totalDataPoints > 0 
+    ? `Analyzing ${totalDataPoints} analysis sessions` 
+    : 'Analyzing sample data for the last 4 days';
 
   const footerLinks = [
     { label: 'Documentation', href: '#docs' },
@@ -38,7 +72,7 @@ function InsightsPage() {
         <div className="insights-header">
           <div className="header-content">
             <h1 className="page-title">Trend & Timeline Analysis</h1>
-            <p className="page-subtitle">Analyzing 1.2M data points across Twitter, Reddit, and News globally.</p>
+            <p className="page-subtitle">{dataPointsText}</p>
           </div>
           <div className="header-controls">
             <div className="time-range-selector">
@@ -194,14 +228,14 @@ function InsightsPage() {
               <h5 className="aspect-list-title">Aspect Breakdown</h5>
             </div>
             <div className="aspect-items">
-              {aspects.map((aspect) => (
+              {aspects.map((aspect, index) => (
                 <div
-                  key={aspect.id}
-                  className={`aspect-item ${activeAspect === aspect.id ? 'active' : ''}`}
-                  onClick={() => setActiveAspect(aspect.id)}
+                  key={index}
+                  className={`aspect-item ${activeAspect === aspect.name.toLowerCase().replace(/\s+/g, '-') ? 'active' : ''}`}
+                  onClick={() => setActiveAspect(aspect.name.toLowerCase().replace(/\s+/g, '-'))}
                 >
                   <div className="aspect-info">
-                    <span className="aspect-name">{aspect.label}</span>
+                    <span className="aspect-name">{aspect.name}</span>
                     <span className="aspect-mentions">{aspect.mentions} mentions</span>
                   </div>
                   <div className="aspect-sparkline">
