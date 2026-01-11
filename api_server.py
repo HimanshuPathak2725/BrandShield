@@ -78,6 +78,10 @@ def register():
 
         # Return user info (excluding password)
         user_response = {k: v for k, v in new_user.items() if k != 'password'}
+        
+        # Auto-login after registration
+        session['user'] = user_response
+        
         return jsonify({'message': 'Registration successful', 'user': user_response}), 201
 
     except Exception as e:

@@ -1,11 +1,11 @@
 {
   "nssofficialadgips@gmail.com": {
-    "id": "b7810b9b-1db1-4d07-8e48-f82fb425154f",
+    "id": "1a03db47-970d-4705-b84c-21f7d96f6fa8",
     "email": "nssofficialadgips@gmail.com",
-    "password": "nssofficial12426",
+    "password": "scrypt:32768:8:1$C6zvgR5L6MBzsfaV$203abd838455ec30575e3f1da553c5fbd1c4a30168bcff134a9c7c7251704f96b80819783c176281461e0c7601ba4954f887c3b8adece5f9ce010960b7124dbb",
     "name": "Riya",
     "company": "Adgips",
-    "created_at": "2026-01-10T22:09:42.104423",
-    "last_login": "2026-01-10T22:10:45.069522"
+    "created_at": "2026-01-11T15:44:30.825234",
+    "last_login": "2026-01-11T15:45:45.003487"
   }
 }
