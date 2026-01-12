@@ -93,7 +93,6 @@ function AnalysisForm() {
           <div className="form-group">
             <label className="form-label">BRAND NAME</label>
             <div className="input-wrapper">
-              <span className="input-icon"><FaSearch /></span>
               <input
                 type="text"
                 className="form-input"

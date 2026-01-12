@@ -107,6 +107,53 @@ function ResultsPage() {
       }
   }
 
+  // Calculate emotion velocity data
+  const calculateVelocityData = () => {
+    if (!analysisData) return null;
+
+    const emotions = analysisData.emotion_analysis || {};
+    const sentimentStats = analysisData.sentiment_stats || {};
+    const riskMetrics = analysisData.risk_metrics || {};
+    
+    // Calculate overall velocity based on sentiment volatility and negative percentage
+    const negativePercentage = sentimentStats.negative_percentage || 0;
+    const positivePercentage = sentimentStats.positive_percentage || 0;
+    const riskScore = riskMetrics.overall_risk_score || 0;
+    
+    // Velocity formula: combines sentiment polarity and risk
+    const sentimentVolatility = Math.abs(negativePercentage - positivePercentage) / 100;
+    const overallVelocity = (sentimentVolatility * 2) + (riskScore / 50);
+    
+    // Map emotion data to monitor bars
+    const emotionMap = {
+      'anger': { name: 'ANGER', color: 'red' },
+      'fear': { name: 'FEAR', color: 'amber' },
+      'neutral': { name: 'NEUTRAL', color: 'gray' },
+      'joy': { name: 'JOY', color: 'green' }
+    };
+    
+    const monitor_data = Object.keys(emotionMap).map(key => {
+      const emotionValue = emotions[key] || 0;
+      const multiplier = (emotionValue / 100 * 3).toFixed(1); // Scale to 0-3x range
+      const filled = Math.round(emotionValue / 100 * 16); // Scale to 0-16 bars
+      
+      return {
+        name: emotionMap[key].name,
+        multiplier: `${multiplier}x`,
+        color: emotionMap[key].color,
+        filled: Math.min(filled, 16),
+        status: emotionValue > 60 ? 'CRITICAL' : emotionValue > 30 ? 'ELEVATED' : 'STABLE'
+      };
+    });
+    
+    return {
+      overall_velocity: overallVelocity,
+      monitor_data
+    };
+  };
+
+  const velocityData = calculateVelocityData();
+
   return (
     <div className="results-page">
       <ResultsHeader brand={analysisData.brand} />
@@ -119,7 +166,7 @@ function ResultsPage() {
 
           <AspectCards findings={analysisData.rag_findings} />
           <TopOpinions positiveOpinions={positiveOpinions.slice(0, 3)} negativeOpinions={negativeOpinions.slice(0, 3)} />
-          <EmotionVelocityMonitor />
+          <EmotionVelocityMonitor data={velocityData} />
           <ResponseStrategies onSimulate={handleRunSimulation} />
           <DigitalTwinSimulation simulationState={activeSimulation} />
           <AIInsight data={analysisData} />
