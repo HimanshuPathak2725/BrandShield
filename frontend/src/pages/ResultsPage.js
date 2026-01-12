@@ -73,6 +73,56 @@ function ResultsPage() {
   const positiveOpinions = [];
   const negativeOpinions = [];
 
+  const cleanOpinionText = (text) => {
+    if (!text) return "";
+    let clean = text;
+    let title = "";
+
+    // 1. Try to parse structured format (RAG style)
+    const titleMatch = text.match(/Title:\s*(.*?)(?:\n|$)/);
+    const contentMatch = text.match(/Content:\s*([\s\S]*)/);
+    
+    if (contentMatch) {
+      clean = contentMatch[1];
+    }
+    if (titleMatch) {
+      title = titleMatch[1].trim();
+    }
+
+    // 2. Remove Markdown images completely
+    clean = clean.replace(/!\[.*?\]\(.*?\)/g, '');
+
+    // 3. Replace Markdown links with just their text
+    clean = clean.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+    // 4. Remove raw URLs
+    clean = clean.replace(/https?:\/\/\S+/g, '');
+
+    // 5. Clean up RAG artifacts if found
+    if (titleMatch || contentMatch) {
+         clean = clean.replace(/Published:.*?\n/g, '');
+         clean = clean.replace(/URL:.*?\n/g, '');
+    }
+
+    // 6. Clean up whitespace
+    clean = clean.replace(/\s+/g, ' ').trim();
+
+    // 7. Combine Title and Content for context
+    if (title && title !== "Unknown" && title.length > 2) {
+       // Avoid exact duplication
+       if (!clean.toLowerCase().startsWith(title.toLowerCase())) {
+          return `${title} — ${clean}`;
+       }
+    }
+
+    // 8. Fallback
+    if (clean.length < 10 && title) {
+      return title;
+    }
+
+    return clean || "No readable content available.";
+  };
+
   if (analysisData) {
       // 1. Extract from RAG Findings
       if (analysisData.rag_findings) {
@@ -83,7 +133,7 @@ function ResultsPage() {
                  id: item.url || Math.random(),
                  aspect: category.category,
                  sentiment: item.sentiment_label,
-                 text: item.context,
+                 text: cleanOpinionText(item.context),
                  source: item.source
                };
                if (item.sentiment_label === 'Positive') positiveOpinions.push(opinion);
@@ -100,7 +150,7 @@ function ResultsPage() {
                    id: reply.id || `sm-${idx}`,
                    aspect: 'Social Feedback',
                    sentiment: 'Negative',
-                   text: reply.content,
+                   text: cleanOpinionText(reply.content || reply.text),
                    source: reply.source
                });
           });
