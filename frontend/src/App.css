@@ -5,47 +5,48 @@
 }
 
 .App {
-  background: #101222;
+  background: var(--bg-dark);
   min-height: 100vh;
-  color: #e2e8f0;
+  color: var(--text-main);
   overflow-x: hidden;
   font-family: 'Inter', sans-serif;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 25%);
 }
 
 .main-content {
-  background: linear-gradient(180deg, #101222 0%, #1a1d3a 50%, #101222 100%);
   padding: 0;
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #101222;
+  background: var(--bg-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2a2f55;
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a416e;
+  background: var(--text-muted);
 }
 
 /* Selection */
 ::selection {
-  background: rgba(37, 99, 235, 0.3);
-  color: #e2e8f0;
+  background: var(--primary-glow);
+  color: white;
 }
 
 @media (max-width: 1024px) {

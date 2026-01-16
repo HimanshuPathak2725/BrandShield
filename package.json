@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.18",
+    "autoprefixer": "^10.4.23",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.26.2",
+    "lucide-react": "^0.562.0",
+    "postcss": "^8.5.6",
+    "recharts": "^3.6.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.18"
+  }
+}

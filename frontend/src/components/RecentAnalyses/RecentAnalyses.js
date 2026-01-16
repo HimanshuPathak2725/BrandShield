@@ -47,33 +47,18 @@ function RecentAnalyses() {
             </div>
             <div className="analysis-info">
               <h4 className="analysis-name">{agent.name}</h4>
-              <p className="analysis-meta" style={{ marginTop: '4px' }}>
+              <p className="analysis-meta">
                 {agent.description}
               </p>
             </div>
-            <span style={{
-              padding: '4px 8px',
-              backgroundColor: '#0F9D58',
-              color: 'white',
-              borderRadius: '4px',
-              fontSize: '0.75rem'
-            }}>
+            <span className="status-dot-check">
               ✓
             </span>
           </div>
         ))}
       </div>
 
-      <div style={{
-        marginTop: '16px',
-        padding: '12px',
-        backgroundColor: '#3a85df',
-        borderRadius: '8px',
-        textAlign: 'center',
-        fontSize: '0.85rem',
-        color: '#dce1e8',
-        fontWeight: '500'
-      }}>
+      <div className="pipeline-status">
         🔄 Multi-agent orchestration via LangGraph
       </div>
     </div>

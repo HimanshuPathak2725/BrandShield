@@ -72,17 +72,7 @@ function AnalysisForm() {
         </p>
 
         {error && (
-          <div className="error-message" style={{
-            backgroundColor: '#fee',
-            color: '#c00',
-            padding: '12px',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            border: '1px solid #fcc',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
+          <div className="error-message">
             <FaExclamationTriangle /> {error}
           </div>
         )}

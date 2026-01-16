@@ -6,7 +6,8 @@ import Hero from './components/Hero/Hero';
 import Features from './components/Features/Features';
 import CTA from './components/CTA/CTA';
 import Footer from './components/Footer/Footer';
-import DashboardPage from './pages/DashboardPage';
+import DashboardPage from './pages/Dashboard';
+import Layout from './components/Layout/Layout';
 import ResultsPage from './pages/ResultsPage';
 import TrendsPage from './pages/TrendsPage/TrendsPage';
 import InsightsPage from './pages/InsightsPage/InsightsPage';
@@ -86,10 +87,14 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
-        <Route path="/trends" element={<ProtectedRoute><TrendsPage /></ProtectedRoute>} />
-        <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+        
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/trends" element={<TrendsPage />} />
+          <Route path="/results" element={<ResultsPage />} />
+        </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
