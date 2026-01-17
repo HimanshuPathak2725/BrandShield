@@ -1,9 +1,13 @@
 # Python
 __pycache__/
+users.json
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -26,15 +30,16 @@ ENV/
 env/
 .venv
 
+# Environment variables
+.env
+frontend/.env
+
 # IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# Environment Variables
-.env
 
 # Jupyter Notebooks
 .ipynb_checkpoints
@@ -51,6 +56,9 @@ chroma_db/
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temporary files
 *.tmp
@@ -62,10 +70,17 @@ chroma_db/
 # Model cache
 models/
 .cache/
-*.log
 
-# Streamlit
-.streamlit/
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/build/
 
-.node_modules/
-dist/
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# FAISS index files (large)
+*.index
+*.faiss

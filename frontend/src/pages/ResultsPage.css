@@ -1,0 +1,31 @@
+.results-page {
+  background: linear-gradient(to bottom, #0a0d17 0%, #101222 50%, #0a0d17 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+.results-main {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .results-main {
+    padding: 2rem 1.5rem;
+  }
+}
+
+.results-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+}
+
+.results-row {
+  grid-column: span 12;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+}

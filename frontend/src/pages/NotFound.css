@@ -1,0 +1,74 @@
+.notfound-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.notfound-container {
+  text-align: center;
+  color: white;
+}
+
+.notfound-content {
+  max-width: 600px;
+}
+
+.error-code {
+  font-size: 120px;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.error-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 20px 0;
+}
+
+.error-description {
+  font-size: 18px;
+  margin: 20px 0 40px;
+  opacity: 0.9;
+}
+
+.notfound-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.notfound-actions .btn {
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.notfound-actions .btn-primary {
+  background: white;
+  color: #667eea;
+}
+
+.notfound-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.notfound-actions .btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+}
+
+.notfound-actions .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}

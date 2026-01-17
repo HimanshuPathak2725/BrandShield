@@ -1,0 +1,87 @@
+.demo-analysis {
+  padding: 2rem 0;
+}
+
+.demo-header {
+  margin-bottom: 2.5rem;
+}
+
+.demo-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.demo-card {
+  background: #1a1d3a;
+  border: 1px solid #2a2f55;
+  border-radius: 1rem;
+  padding: 1.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-card:hover {
+  border-color: #1224e2;
+  background: rgba(18, 36, 226, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(18, 36, 226, 0.15);
+}
+
+.demo-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.demo-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 0.75rem 0;
+}
+
+.demo-description {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 1.25rem 0;
+  flex: 1;
+}
+
+.demo-btn {
+  background: transparent;
+  border: none;
+  color: #1224e2;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  text-align: left;
+}
+
+.demo-btn:hover {
+  color: #0a1bc9;
+}
+
+@media (max-width: 768px) {
+  .demo-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .demo-card {
+    padding: 1.25rem;
+  }
+}

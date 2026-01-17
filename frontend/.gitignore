@@ -1,4 +1,5 @@
 # Dependencies
+<<<<<<< HEAD
 node_modules
 .pnp
 .pnp.js
@@ -11,6 +12,21 @@ build
 
 # Misc
 .DS_Store
+=======
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+
+# Misc
+.DS_Store
+.env
+>>>>>>> ad481d1312145af96e215b5e3047b74e3e064006
 .env.local
 .env.development.local
 .env.test.local
@@ -19,3 +35,13 @@ build
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+<<<<<<< HEAD
+=======
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+>>>>>>> ad481d1312145af96e215b5e3047b74e3e064006
