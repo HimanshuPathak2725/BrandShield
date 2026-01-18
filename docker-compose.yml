@@ -1,6 +1,13 @@
 version: '3.8'
 
 services:
+  database:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   backend:
     build: .
     ports:
@@ -8,6 +15,8 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=prod_secret_key_change_me
+    depends_on:
+      - database
     volumes:
       - ./data:/app/data  # Persist SQLite & Logs
 
@@ -22,3 +31,6 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+
+volumes:
+  mongo_data:

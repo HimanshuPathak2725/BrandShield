@@ -1,41 +1,67 @@
 import jwt
 import datetime
 import os
-import hashlib
+import bcrypt
 from typing import Optional, Dict
-
-SECRET_KEY = os.getenv("JWT_SECRET", "supersecretkey")
-
-# Mock User DB (Normally SQLite)
-USERS_DB = {
-    "admin@brandshield.ai": {
-        "password_hash": hashlib.sha256("password123".encode()).hexdigest(),
-        "org_id": "org_default",
-        "role": "admin"
-    }
-}
+from services.models import User
+from services.security_service import security_service
 
 class AuthService:
-    def login(self, email, password) -> Optional[str]:
-        user = USERS_DB.get(email)
-        if not user:
-            return None
-        
-        phash = hashlib.sha256(password.encode()).hexdigest()
-        if phash == user["password_hash"]:
-            payload = {
-                "email": email,
-                "org_id": user["org_id"],
-                "role": user["role"],
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-            }
-            return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
-        return None
+    def register(self, name, email, password) -> Dict:
+        # Check if user exists
+        if User.find_by_email(email):
+             return {"error": "User already exists"}
 
-    def verify_token(self, token) -> Optional[Dict]:
+        # Hash password
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+        # Create User
         try:
-            return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        except:
-            return None
+            user_id = User.create({
+                "name": name,
+                "email": email,
+                "password": hashed,
+                "company_id": None # No company yet, will set in onboarding
+            })
+            
+            # Generate Token
+            token = security_service.create_token(user_id, "pending_onboarding")
+            
+            return {
+                "token": token,
+                "user": {"id": user_id, "name": name, "email": email, "companyId": None}
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def login(self, email, password) -> Dict:
+        user_doc = User.find_by_email(email)
+        if not user_doc:
+            return {"error": "Invalid credentials"}
+        
+        # Verify Password
+        stored_hash = user_doc["password"].encode('utf-8')
+        if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
+            user_id = str(user_doc["_id"])
+            company_id = str(user_doc["company_id"]) if user_doc.get("company_id") else None
+            org_id = company_id if company_id else "pending_onboarding"
+            
+            token = security_service.create_token(user_id, org_id)
+            
+            return {
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "name": user_doc["name"],
+                    "email": user_doc["email"],
+                    "companyId": company_id
+                }
+            }
+        
+        return {"error": "Invalid credentials"}
+
+auth_service = AuthService()
+
 
 auth_service = AuthService()

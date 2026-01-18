@@ -15,47 +15,52 @@ import {
 } from 'recharts';
 import RiskTrajectoryChart from '../components/Dashboard/RiskTrajectoryChart';
 
-// --- MOCK DATA ---
-const sentimentData = [
-  { name: 'Positive', value: 3, color: '#10b981' },
-  { name: 'Neutral', value: 33, color: '#64748b' },
-  { name: 'Negative', value: 64, color: '#ef4444' },
-];
-
-const MOCK_MENTIONS = [
-  { id: 1, user: "@tech_guru", text: "BrandShield's latest update is actually kinda fire 🔥", sentiment: "positive", platform: "Twitter", time: "2m ago" },
-  { id: 2, user: "@angry_user", text: "Why is the service down again? #brandshield", sentiment: "negative", platform: "Reddit", time: "5m ago" },
-  { id: 3, user: "@market_watch", text: "Tech stocks tumbling, impacting sector leaders.", sentiment: "neutral", platform: "News", time: "12m ago" },
-];
-
 const DashboardPage = () => {
-  const [mentions, setMentions] = useState(MOCK_MENTIONS);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Simulate loading
+  // Poll for updates every 30 seconds
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/dashboard', {
+           headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        
+        if (res.ok) {
+           const json = await res.json();
+           setData(json);
+        }
+      } catch (e) {
+        console.error("Dashboard fetch failed", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Initial fetch
+    fetchDashboard();
+
+    // Set interval
+    const intervalId = setInterval(fetchDashboard, 30000); // 30s polling
+
+    // Cleanup
+    return () => clearInterval(intervalId);
   }, []);
 
-  // Simulate live feed
-  useEffect(() => {
-    if (loading) return;
-    const interval = setInterval(() => {
-      const newMention = {
-        id: Date.now(),
-        user: `@user_${Math.floor(Math.random() * 1000)}`,
-        text: Math.random() > 0.5 ? "Loving the new features!" : "Still waiting for support response...",
-        sentiment: Math.random() > 0.5 ? "positive" : "negative",
-        platform: "Twitter",
-        time: "Just now"
-      };
-      setMentions(prev => [newMention, ...prev.slice(0, 4)]);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [loading]);
-
   if (loading) return <DashboardSkeleton />;
+  if (!data) return <div className="p-10 text-white text-center">Failed to load intelligence. Please ensure you have completed onboarding.</div>;
+
+  const sentimentCounts = data.sentimentCounts || { Positive: 0, Neutral: 0, Negative: 0 };
+  const sentimentData = [
+    { name: 'Positive', value: sentimentCounts.Positive, color: '#10b981' },
+    { name: 'Neutral', value: sentimentCounts.Neutral, color: '#64748b' },
+    { name: 'Negative', value: sentimentCounts.Negative, color: '#ef4444' },
+  ];
+
+  const total = sentimentCounts.Positive + sentimentCounts.Neutral + sentimentCounts.Negative;
+  const negPercentage = total > 0 ? Math.round((sentimentCounts.Negative / total) * 100) : 0;
 
   return (
     <div className="grid grid-cols-12 gap-6 h-full max-h-[calc(100vh-8rem)]">
@@ -100,29 +105,29 @@ const DashboardPage = () => {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-4xl font-bold text-white tracking-tighter">4/10</span>
-            <span className="text-xs text-slate-500 uppercase mt-1">Negativity Index</span>
+            <span className="text-4xl font-bold text-white tracking-tighter">{negPercentage}%</span>
+            <span className="text-xs text-slate-500 uppercase mt-1">Negativity</span>
           </div>
         </div>
         
         <div className="flex gap-4 w-full justify-center mt-2">
            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-             <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pos
+             <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Pos ({sentimentCounts.Positive})
            </div>
            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-             <div className="w-2 h-2 rounded-full bg-slate-500"></div> Neu
+             <div className="w-2 h-2 rounded-full bg-slate-500"></div> Neu ({sentimentCounts.Neutral})
            </div>
            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-             <div className="w-2 h-2 rounded-full bg-red-500"></div> Neg
+             <div className="w-2 h-2 rounded-full bg-red-500"></div> Neg ({sentimentCounts.Negative})
            </div>
         </div>
       </div>
 
       {/* 3 METRIC CARDS (Middle Row) */}
       {[
-        { title: "Hate Speech", value: "Critical", score: 85, color: "text-red-500", bg: "bg-red-500" },
-        { title: "Product Frustration", value: "Elevated", score: 62, color: "text-orange-500", bg: "bg-orange-500" },
-        { title: "Safety Risks", value: "Low", score: 12, color: "text-blue-500", bg: "bg-blue-500" }
+        { title: "Avg Severity", value: "Real-Time", score: data.sentimentScore ? Math.abs(data.sentimentScore).toFixed(2) : "0.00", color: data.sentimentScore < -0.2 ? "text-red-500" : "text-blue-500", bg: "bg-blue-500" },
+        { title: "Velocity", value: "Activity", score: data.velocityScore || 0, color: "text-orange-500", bg: "bg-orange-500" },
+        { title: "Total Posts", value: "Analyzed", score: total, color: "text-emerald-500", bg: "bg-emerald-500" }
       ].map((metric, i) => (
         <div key={i} className="col-span-12 md:col-span-4 glass-card p-5 group hover:scale-[1.02] transition-transform duration-300">
            <div className="flex justify-between items-start mb-4">
@@ -135,9 +140,9 @@ const DashboardPage = () => {
            </div>
            <h4 className="text-slate-400 text-sm font-medium mb-1">{metric.title}</h4>
            <div className="flex items-end gap-2">
-             <span className="text-2xl font-bold text-white">{metric.score}%</span>
+             <span className="text-2xl font-bold text-white">{metric.score}</span>
              <span className="text-xs text-slate-500 mb-1 flex items-center">
-               <TrendingUp size={12} className="mr-0.5" /> +2.4%
+               <TrendingUp size={12} className="mr-0.5" /> Live
              </span>
            </div>
            {/* Mini Progress/Sparkline Visual */}
@@ -164,30 +169,30 @@ const DashboardPage = () => {
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
           <AnimatePresence initial={false}>
-            {mentions.map((mention) => (
+            {data.topMentions && data.topMentions.map((mention, index) => (
               <motion.div
-                key={mention.id}
+                key={index}
                 initial={{ opacity: 0, y: -20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                 transition={{ duration: 0.3 }}
                 layout
                 className={`p-3 rounded-lg border flex gap-3 ${
-                  mention.sentiment === 'negative' 
+                  mention.sentiment.toLowerCase() === 'negative' 
                     ? 'bg-red-500/5 border-red-500/20' 
-                    : mention.sentiment === 'positive'
+                    : mention.sentiment.toLowerCase() === 'positive'
                     ? 'bg-emerald-500/5 border-emerald-500/20'
                     : 'bg-slate-800/50 border-slate-700'
                 }`}
               >
                  <div className={`w-1 h-full rounded-full shrink-0 ${
-                    mention.sentiment === 'negative' ? 'bg-red-500' : mention.sentiment === 'positive' ? 'bg-emerald-500' : 'bg-slate-500'
+                    mention.sentiment.toLowerCase() === 'negative' ? 'bg-red-500' : mention.sentiment.toLowerCase() === 'positive' ? 'bg-emerald-500' : 'bg-slate-500'
                  }`}></div>
                  
                  <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                       <span className="font-semibold text-sm text-slate-200">{mention.user}</span>
-                       <span className="text-xs text-slate-500">{mention.time}</span>
+                       <span className="font-semibold text-sm text-slate-200 capitalize">{mention.source}</span>
+                       <span className="text-xs text-slate-500">{new Date(mention.date).toLocaleTimeString()}</span>
                     </div>
                     <p className="text-sm text-slate-400 mt-1 truncate">{mention.text}</p>
                  </div>

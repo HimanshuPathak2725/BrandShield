@@ -122,10 +122,13 @@ function AuthPage() {
 
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.token) {
+          localStorage.setItem('token', data.token);
+      }
       localStorage.setItem('isAuthenticated', 'true');
       
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Navigate to onboarding for setup
+      navigate('/onboarding');
     } catch (err) {
       console.error('Registration error:', err);
       if (err.message === 'Failed to fetch') {

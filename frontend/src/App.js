@@ -13,58 +13,29 @@ import TrendsPage from './pages/TrendsPage/TrendsPage';
 import InsightsPage from './pages/InsightsPage/InsightsPage';
 import AuthPage from './pages/AuthPage/AuthPage';
 import AdminPage from './pages/AdminPage/AdminPage';
+import CrisisSimulatorPage from './pages/CrisisSimulatorPage';
+import SettingsPage from './pages/SettingsPage';
+import ConstructionPage from './pages/ConstructionPage';
 import NotFound from './pages/NotFound';
+
+import Onboarding from './pages/Onboarding';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setIsAuthenticated(data.authenticated);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #1a1f3a 0%, #2d1b4e 100%)',
-        color: 'white'
-      }}>
-        <div>Loading...</div>
-      </div>
-    );
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/auth" replace />;
   }
-
-  return isAuthenticated ? children : <Navigate to="/auth" replace />;
+  return children;
 }
 
 function HomePage() {
+  const token = localStorage.getItem('token');
+  if (token) return <Navigate to="/dashboard" replace />;
+
   return (
     <div className="App">
       <Header />
@@ -88,11 +59,20 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/admin" element={<AdminPage />} />
         
+        <Route path="/onboarding" element={
+            <ProtectedRoute>
+                <Onboarding />
+            </ProtectedRoute>
+        } />
+        
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/trends" element={<TrendsPage />} />
           <Route path="/results" element={<ResultsPage />} />
+          <Route path="/analytics" element={<TrendsPage />} />
+          <Route path="/simulator" element={<CrisisSimulatorPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

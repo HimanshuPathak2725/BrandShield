@@ -57,7 +57,16 @@ class StreamIngestionService:
         try:
             # Run blocking praw call in executor
             loop = asyncio.get_event_loop()
-            subreddit = await loop.run_in_executor(None, lambda: list(self.reddit.subreddit("all").search(query, sort="new", limit=10)))
+            
+            # Helper to wrap the praw call for error handling inside the executor
+            def safe_reddit_search():
+                try:
+                    return list(self.reddit.subreddit("all").search(query, sort="new", limit=10))
+                except Exception as inner_e:
+                    print(f"Reddit Search Failed: {inner_e}")
+                    raise inner_e
+
+            subreddit = await loop.run_in_executor(None, safe_reddit_search)
             
             for post in subreddit:
                 posts.append({
