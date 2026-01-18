@@ -11,18 +11,54 @@ import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+from flask_apscheduler import APScheduler
+from services.security_service import security_service
+
+# Load environment variables
+load_dotenv()
 
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.graph import create_phase1_graph, create_phase2_graph
 from src.state import AgentState
-
-# Load environment variables
-load_dotenv()
+from services.action_center import action_center
+from services.velocity_predictor import velocity_predictor
+from services.sqlite_db import init_db
+from services.auth_service import auth_service
+from services.models import CompanyProfile, User
+from services.analysis_controller import analysis_controller
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'brandshield-secret-key-dev')
+
+# Initialize DB
+init_db(app)
+
+# Initialize Scheduler
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
+# --- SECURITY MIDDLEWARE ---
+def token_required(f):
+    @wraps(f)
+    async def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(" ")[1]
+        
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 401
+        
+        payload = security_service.verify_token(token)
+        if not payload:
+            return jsonify({'message': 'Token is invalid or expired!'}), 401
+            
+        return await f(current_user=payload, *args, **kwargs)
+    return decorated
 
 # Configure CORS with explicit settings
 CORS(app, 
@@ -34,28 +70,131 @@ CORS(app,
          "expose_headers": ["Content-Type"]
      }})
 
-# File to store users
-USERS_FILE = 'users.json'
+# --- AUTH ENDPOINTS ---
 
-def load_users():
-    if os.path.exists(USERS_FILE):
-        try:
-            with open(USERS_FILE, 'r') as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
+@app.route('/api/auth/login', methods=['POST'])
+async def login():
+    try:
+        data = request.get_json()
+        email = data.get('email') or data.get('username')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({'message': 'Missing credentials'}), 400
+        
+        result = auth_service.login(email, password)
+        
+        if "error" in result:
+             return jsonify({'message': result["error"]}), 401
+             
+        # Session support
+        session['user'] = result["user"]
+        return jsonify(result)
 
-def save_users(users):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({'message': 'Internal server error'}), 500
+
+@app.route('/api/onboarding', methods=['POST'])
+@token_required
+async def onboarding(current_user):
+    try:
+        data = request.get_json()
+        user_id = current_user.get('sub')
+        
+        # 1. Create Company Profile
+        company_data = {
+            "brandName": data.get('brandName'),
+            "website": data.get('website'),
+            "industry": data.get('industry'),
+            "competitors": data.get('competitors', []),
+            "keywords": data.get('keywords', [])
+        }
+        
+        company_id = CompanyProfile.create(company_data)
+        
+        # 2. Link to User
+        User.update(user_id, {"company_id": company_id})
+        
+        # 3. Update Token (Need new org_id in token)
+        new_token = security_service.create_token(user_id, company_id)
+        
+        return jsonify({
+            "message": "Onboarding complete",
+            "token": new_token,
+            "companyId": company_id
+        })
+    except Exception as e:
+        print(f"Onboarding error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard', methods=['GET'])
+@token_required
+async def get_dashboard(current_user):
+    user_id = current_user.get('sub')
+    result = await analysis_controller.get_dashboard_data(user_id)
+    
+    if "error" in result:
+        return jsonify(result), 400
+        
+    return jsonify(result)
+
+# --- BACKGROUND JOBS ---
+@scheduler.task('interval', id='scheduled_cleanup', hours=24)
+def scheduled_cleanup():
+    print("🧹 Running Scheduled Cleanup (Logs/Cache)...")
+    # Placeholder for actual cleanup logic
+
+@app.route('/api/action-center/approve', methods=['POST'])
+# @token_required # Uncomment to enforce security on this route
+async def approve_response():
+    data = request.get_json()
+    response_id = data.get('response_id')
+    selected_idx = data.get('selected_index', 0)
+    
+    if not response_id:
+        return jsonify({'error': 'Missing response_id'}), 400
+        
+    result = await action_center.approve_response(response_id, selected_idx)
+    if not result:
+        return jsonify({'error': 'Response not found'}), 404
+        
+    return jsonify({'status': 'approved', 'response': result.dict()})
+
+@app.route('/api/action-center/send', methods=['POST'])
+async def send_response():
+    data = request.get_json()
+    response_id = data.get('response_id')
+    channel = data.get('channel', 'simulation')
+    
+    if not response_id:
+        return jsonify({'error': 'Missing response_id'}), 400
+
+    success = await action_center.send_response(response_id, channel)
+    return jsonify({'status': 'sent' if success else 'failed'})
+
+@app.route('/api/action-center/latest', methods=['GET'])
+async def get_latest_action():
+    action = await action_center.get_latest_action()
+    if not action:
+         # Mock fallback if no action exists yet for demo
+         return jsonify({
+             "id": "mock_action_1",
+             "status": "draft",
+             "draft_responses": [
+                 {"style": "Empathetic", "text": "We are deeply sorry for the inconvenience and are working hard to resolve it."},
+                 {"style": "Professional", "text": "We acknowledge the issue and have deployed a fix."},
+                 {"style": "Transparent", "text": "Our systems encountered a bug. Here is what happened..."}
+             ]
+         })
+    return jsonify(action)
 
 # In-memory storage for analysis sessions (replace with DB in production)
 analysis_sessions = {}
 analysis_history = []  # Store all analyses with timestamps
 
 @app.route('/api/auth/register', methods=['POST', 'OPTIONS'])
-def register():
+async def register():
     if request.method == 'OPTIONS':
         return '', 204
     
@@ -67,83 +206,25 @@ def register():
         email = data.get('email')
         password = data.get('password')
         name = data.get('name')
-        company = data.get('company', '')
+        # company = data.get('company', '') # Handled in onboarding now
 
         if not email or not password or not name:
             return jsonify({'error': 'Missing required fields'}), 400
 
-        users = load_users()
-        
-        if email in users:
-            return jsonify({'error': 'User already exists'}), 400
-
-        user_id = str(uuid.uuid4())
-        new_user = {
-            'id': user_id,
-            'email': email,
-            'password': generate_password_hash(password),
-            'name': name,
-            'company': company,
-            'created_at': datetime.now().isoformat(),
-            'last_login': None
-        }
-
-        users[email] = new_user
-        save_users(users)
-
-        # Return user info (excluding password)
-        user_response = {k: v for k, v in new_user.items() if k != 'password'}
+        result = auth_service.register(name, email, password)
+        if "error" in result:
+             return jsonify({'error': result["error"]}), 400
         
         # Auto-login after registration
-        session['user'] = user_response
+        session['user'] = result["user"]
         
-        return jsonify({'message': 'Registration successful', 'user': user_response}), 201
+        return jsonify({'message': 'Registration successful', 'user': result["user"], 'token': result["token"]}), 201
 
     except Exception as e:
         print(f"Registration error: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
-@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
-def login():
-    if request.method == 'OPTIONS':
-        return '', 204
-        
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-            
-        email = data.get('email')
-        password = data.get('password')
 
-        if not email or not password:
-            return jsonify({'error': 'Missing email or password'}), 400
-
-        users = load_users()
-        
-        if email not in users:
-            return jsonify({'error': 'Invalid credentials'}), 401
-            
-        user = users[email]
-        
-        if not check_password_hash(user.get('password'), password):
-            return jsonify({'error': 'Invalid credentials'}), 401
-
-        # Update last login
-        user['last_login'] = datetime.now().isoformat()
-        save_users(users)
-        
-        user_response = {k: v for k, v in user.items() if k != 'password'}
-        session['user'] = user_response
-        return jsonify({'message': 'Login successful', 'user': user_response}), 200
-
-    except Exception as e:
-        print(f"Login error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
 @app.route('/api/auth/me', methods=['GET'])
 def check_auth():
@@ -158,6 +239,16 @@ def logout():
     """Logout user"""
     session.pop('user', None)
     return jsonify({'message': 'Logged out'}), 200
+
+@app.route('/api/auth/users', methods=['GET'])
+def get_all_users():
+    """Get all users (Admin only)"""
+    try:
+        users = User.get_all()
+        return jsonify({'users': users}), 200
+    except Exception as e:
+        print(f"Error fetching users: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -179,7 +270,7 @@ def test_endpoint():
     })
 
 @app.route('/api/analyze', methods=['POST'])
-def start_analysis():
+async def start_analysis():
     """
     Start a new brand analysis
     Expected payload: { "brand": "Tesla", "data_source": "Reddit Discussions" }
@@ -215,7 +306,7 @@ def start_analysis():
         # Run Phase 1 (Research & Analysis)
         print(f"Starting Phase 1 analysis for: {brand_name}")
         app1 = create_phase1_graph()
-        phase1_result = app1.invoke(initial_state)
+        phase1_result = await app1.ainvoke(initial_state)
         
         # Generate session ID
         session_id = f"session_{len(analysis_sessions) + 1}"
@@ -258,7 +349,7 @@ def start_analysis():
         }), 500
 
 @app.route('/api/analyze/<session_id>/finalize', methods=['POST'])
-def finalize_analysis(session_id):
+async def finalize_analysis(session_id):
     """
     Finalize analysis with approved replies
     Expected payload: { "approved_replies": [...] }
@@ -278,7 +369,7 @@ def finalize_analysis(session_id):
         # Run Phase 2 (Strategy & Report)
         print(f"Starting Phase 2 for session: {session_id}")
         app2 = create_phase2_graph()
-        phase2_result = app2.invoke(current_state)
+        phase2_result = await app2.ainvoke(current_state)
         
         # Update session
         session['state'] = phase2_result
@@ -555,7 +646,20 @@ def get_trends():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 Starting BrandShield AI API Server...")
+    # Initialize DBs
+    from services.action_center import action_center
+    import asyncio
+    
+    # Run DB init
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    loop.run_until_complete(action_center.init_db())
+    
+    print("🚀 Starting BrandShield AI API Server (SQLite Enabled)...")
     print("📡 API will be available at: http://localhost:5000")
     print("🔑 Make sure your .env file is configured with API keys")
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)

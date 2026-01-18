@@ -1,8 +1,18 @@
 """
 State definition for the BrandShield_Lite agent system.
 """
-from typing import TypedDict, List, Dict, Any
+from typing import TypedDict, List, Dict, Any, Optional
+from datetime import datetime
+from pydantic import BaseModel
 
+class SocialPost(BaseModel):
+    platform: str
+    text: str
+    author: str
+    timestamp: datetime
+    url: str
+    engagement: int
+    sentiment: Optional[float] = 0.0
 
 class AgentState(TypedDict):
     """

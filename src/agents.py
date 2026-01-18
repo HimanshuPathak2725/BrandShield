@@ -292,7 +292,8 @@ def rag_agent(state: AgentState) -> AgentState:
     print("📚 Step 1: Converting filtered content to documents...")
     documents = []
     for idx, item in enumerate(filtered_content):
-        content = (f"Title: {item['title']}\n"
+        title = item.get('title', 'No Title')
+        content = (f"Title: {title}\n"
                   f"Published: {item.get('formatted_date', 'Unknown')} ({item.get('time_ago', 'Unknown')})\n"
                   f"URL: {item['url']}\n"
                   f"Content: {item['text']}")
