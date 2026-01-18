@@ -25,16 +25,9 @@ from src.graph import create_phase1_graph, create_phase2_graph
 from src.state import AgentState
 from services.action_center import action_center
 from services.velocity_predictor import velocity_predictor
-from services.sqlite_db import init_db
-from services.auth_service import auth_service
-from services.models import CompanyProfile, User
-from services.analysis_controller import analysis_controller
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'brandshield-secret-key-dev')
-
-# Initialize DB
-init_db(app)
 
 # Initialize Scheduler
 scheduler = APScheduler()
@@ -57,7 +50,7 @@ def token_required(f):
         if not payload:
             return jsonify({'message': 'Token is invalid or expired!'}), 401
             
-        return await f(current_user=payload, *args, **kwargs)
+        return await f(*args, **kwargs)
     return decorated
 
 # Configure CORS with explicit settings
@@ -70,74 +63,57 @@ CORS(app,
          "expose_headers": ["Content-Type"]
      }})
 
-# --- AUTH ENDPOINTS ---
+# File to store users
+USERS_FILE = 'users.json'
 
+def load_users():
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, indent=2)
+
+# --- AUTH ENDPOINTS ---
 @app.route('/api/auth/login', methods=['POST'])
 async def login():
-    try:
-        data = request.get_json()
-        email = data.get('email') or data.get('username')
-        password = data.get('password')
-        
-        if not email or not password:
-            return jsonify({'message': 'Missing credentials'}), 400
-        
-        result = auth_service.login(email, password)
-        
-        if "error" in result:
-             return jsonify({'message': result["error"]}), 401
-             
-        # Session support
-        session['user'] = result["user"]
-        return jsonify(result)
-
-    except Exception as e:
-        print(f"Login error: {str(e)}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@app.route('/api/onboarding', methods=['POST'])
-@token_required
-async def onboarding(current_user):
-    try:
-        data = request.get_json()
-        user_id = current_user.get('sub')
-        
-        # 1. Create Company Profile
-        company_data = {
-            "brandName": data.get('brandName'),
-            "website": data.get('website'),
-            "industry": data.get('industry'),
-            "competitors": data.get('competitors', []),
-            "keywords": data.get('keywords', [])
-        }
-        
-        company_id = CompanyProfile.create(company_data)
-        
-        # 2. Link to User
-        User.update(user_id, {"company_id": company_id})
-        
-        # 3. Update Token (Need new org_id in token)
-        new_token = security_service.create_token(user_id, company_id)
-        
-        return jsonify({
-            "message": "Onboarding complete",
-            "token": new_token,
-            "companyId": company_id
-        })
-    except Exception as e:
-        print(f"Onboarding error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/dashboard', methods=['GET'])
-@token_required
-async def get_dashboard(current_user):
-    user_id = current_user.get('sub')
-    result = await analysis_controller.get_dashboard_data(user_id)
+    data = request.get_json()
+    # Check for email OR username
+    username_or_email = data.get('email') or data.get('username')
+    password = data.get('password')
     
-    if "error" in result:
-        return jsonify(result), 400
+    if not data or not username_or_email or not password:
+        print(f"Login failed: Missing credentials. Data: {data}")
+        return jsonify({'message': 'Could not verify', 'www-authenticate': 'Basic realm="Login required!"'}), 401
+    
+    users = load_users()
+    user = users.get(username_or_email)
+    
+    if not user:
+        print(f"Login failed: User {username_or_email} not found")
+        return jsonify({'message': 'User not found'}), 401
+
+    if check_password_hash(user['password'], password):
+        # Pass required org_id and prefer user ID over email
+        token = security_service.create_token(
+            user_id=user.get('id', username_or_email),
+            org_id=user.get('company', 'default-org')
+        )
         
-    return jsonify(result)
+        # Support Hybrid Auth: Token + Session
+        # Session for Web Frontend, Token for API Clients
+        user_response = {k: v for k, v in user.items() if k != 'password'}
+        session['user'] = user_response
+        print(f"Login success: {username_or_email}")
+        return jsonify({'token': token, 'user': user_response})
+        
+    print(f"Login failed: Invalid password for {username_or_email}")
+    return jsonify({'message': 'Invalid password'}), 401
 
 # --- BACKGROUND JOBS ---
 @scheduler.task('interval', id='scheduled_cleanup', hours=24)
@@ -194,7 +170,7 @@ analysis_sessions = {}
 analysis_history = []  # Store all analyses with timestamps
 
 @app.route('/api/auth/register', methods=['POST', 'OPTIONS'])
-async def register():
+def register():
     if request.method == 'OPTIONS':
         return '', 204
     
@@ -206,22 +182,42 @@ async def register():
         email = data.get('email')
         password = data.get('password')
         name = data.get('name')
-        # company = data.get('company', '') # Handled in onboarding now
+        company = data.get('company', '')
 
         if not email or not password or not name:
             return jsonify({'error': 'Missing required fields'}), 400
 
-        result = auth_service.register(name, email, password)
-        if "error" in result:
-             return jsonify({'error': result["error"]}), 400
+        users = load_users()
+        
+        if email in users:
+            return jsonify({'error': 'User already exists'}), 400
+
+        user_id = str(uuid.uuid4())
+        new_user = {
+            'id': user_id,
+            'email': email,
+            'password': generate_password_hash(password),
+            'name': name,
+            'company': company,
+            'created_at': datetime.now().isoformat(),
+            'last_login': None
+        }
+
+        users[email] = new_user
+        save_users(users)
+
+        # Return user info (excluding password)
+        user_response = {k: v for k, v in new_user.items() if k != 'password'}
         
         # Auto-login after registration
-        session['user'] = result["user"]
+        session['user'] = user_response
         
-        return jsonify({'message': 'Registration successful', 'user': result["user"], 'token': result["token"]}), 201
+        return jsonify({'message': 'Registration successful', 'user': user_response}), 201
 
     except Exception as e:
         print(f"Registration error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 
@@ -239,16 +235,6 @@ def logout():
     """Logout user"""
     session.pop('user', None)
     return jsonify({'message': 'Logged out'}), 200
-
-@app.route('/api/auth/users', methods=['GET'])
-def get_all_users():
-    """Get all users (Admin only)"""
-    try:
-        users = User.get_all()
-        return jsonify({'users': users}), 200
-    except Exception as e:
-        print(f"Error fetching users: {e}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -659,7 +645,7 @@ if __name__ == '__main__':
     
     loop.run_until_complete(action_center.init_db())
     
-    print("🚀 Starting BrandShield AI API Server (SQLite Enabled)...")
+    print("🚀 Starting BrandShield AI API Server...")
     print("📡 API will be available at: http://localhost:5000")
     print("🔑 Make sure your .env file is configured with API keys")
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
