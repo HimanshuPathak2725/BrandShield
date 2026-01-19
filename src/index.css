@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+
+/* body{
+  background-color: black;
+  color: white;
+} */
+
+@font-face {
+  font-family: font1;
+  src: url(../public/Lausanne-500.woff2);
+}
+
+@font-face {
+  font-family: font2;
+  src: url(../public/Lausanne-300.woff2);
+}
+@font-face {
+  font-family: font3;
+  src: url(../public/9dcef913907d177d-s.p.woff2);
+}
+@font-face {
+  font-family: font4;
+  src: url(../public/231eb4a1ab154b5a-s.p.woff2);
+}
+@font-face {
+  font-family: font5;
+  src: url(../public/814dad51953cb2f1-s.p.woff2);
+}
+@font-face {
+  font-family: font6;
+  src: url(../public/d2f08f2d11942c7b-s.p.woff2);
+}
+
+/* @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap'); */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Special+Gothic+Expanded+One&display=swap');
+
+.oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+
+.oswald-2 {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+
+.oswald-3 {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Hide scrollbar for Webkit browsers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+
