@@ -1,55 +1,16 @@
-# BrandShield Frontend
+# React + Vite
 
-React frontend application for BrandShield.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Getting Started
+Currently, two official plugins are available:
 
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### Installation
+## React Compiler
 
-```bash
-npm install
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### Available Scripts
+## Expanding the ESLint configuration
 
-#### Start the development server
-```bash
-npm start
-```
-Runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-#### Build for production
-```bash
-npm build
-```
-Builds the app for production to the `build` folder.
-
-#### Run tests
-```bash
-npm test
-```
-Launches the test runner in interactive watch mode.
-
-## Project Structure
-
-```
-frontend/
-├── public/
-│   └── index.html
-├── src/
-│   ├── components/
-│   ├── App.js
-│   ├── App.css
-│   ├── index.js
-│   └── index.css
-├── package.json
-└── README.md
-```
-
-## License
-
-This project is private and proprietary to BrandShield.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

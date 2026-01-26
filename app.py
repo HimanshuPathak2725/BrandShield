@@ -158,7 +158,7 @@ def dashboard_screen():
         st.info("Start monitoring to see real-time data.")
         return
 
-    with tab1: # Live Feed
+    with tab1: #  Feed
         st.subheader("📡 Real-Time Social Ingestion")
         
         # Metrics

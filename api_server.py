@@ -56,7 +56,7 @@ def token_required(f):
 # Configure CORS with explicit settings
 CORS(app, 
      resources={r"/*": {
-         "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+         "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
          "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          "allow_headers": ["Content-Type", "Authorization"],
          "supports_credentials": True,
@@ -120,6 +120,83 @@ async def login():
 def scheduled_cleanup():
     print("🧹 Running Scheduled Cleanup (Logs/Cache)...")
     # Placeholder for actual cleanup logic
+
+@app.route('/api/dashboard', methods=['GET', 'OPTIONS'])
+def get_dashboard_data():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
+    try:
+        # Check auth
+        token = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(" ")[1]
+        
+        # We can enforce token here or allow public for demo
+        # if not token: return jsonify({'message': 'Token missing'}), 401
+        
+        # If we have history, use the latest analysis
+        if analysis_history:
+            latest = analysis_history[-1]
+            stats = latest.get('sentiment_stats', {})
+            
+            pos = stats.get('positive_ratio', 0)
+            neu = stats.get('neutral_ratio', 0)
+            neg = stats.get('negative_ratio', 0)
+            
+            # Normalize to 0-100
+            if pos <= 1 and neu <= 1 and neg <= 1:
+                pos *= 100
+                neu *= 100
+                neg *= 100
+                
+            sentiment_counts = {
+                "Positive": round(pos),
+                "Neutral": round(neu),
+                "Negative": round(neg)
+            }
+            
+            # Simple fallback for score
+            score = (pos - neg) / 100.0 
+            
+            return jsonify({
+                "sentimentCounts": sentiment_counts,
+                "sentimentScore": score,
+                "velocityScore": latest.get('risk_metrics', {}).get('sentiment_velocity', 0),
+                "topMentions": [] # Populate if available
+            })
+            
+        # Return mock/demo data so the dashboard is not empty
+        return jsonify({
+            "sentimentCounts": { "Positive": 65, "Neutral": 25, "Negative": 10 },
+            "sentimentScore": 0.55,
+            "velocityScore": 42,
+            "topMentions": [
+                {
+                    "source": "Twitter",
+                    "sentiment": "Positive",
+                    "date": datetime.now().isoformat(),
+                    "text": "BrandShield is detecting risks faster than ever. Impressive update!"
+                },
+                {
+                    "source": "Reddit", 
+                    "sentiment": "Neutral",
+                    "date": datetime.now().isoformat(),
+                    "text": "Has anyone tried the new crisis simulation feature?"
+                },
+                {
+                    "source": "News",
+                    "sentiment": "Negative",
+                    "date": datetime.now().isoformat(),
+                    "text": "Concerns raised about data privacy in AI monitoring tools."
+                }
+            ]
+        })
+
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/action-center/approve', methods=['POST'])
 # @token_required # Uncomment to enforce security on this route
@@ -212,7 +289,13 @@ def register():
         # Auto-login after registration
         session['user'] = user_response
         
-        return jsonify({'message': 'Registration successful', 'user': user_response}), 201
+        # Generate Token for immediate access
+        token = security_service.create_token(
+            user_id=user_id,
+            org_id='pending_onboarding'
+        )
+        
+        return jsonify({'message': 'Registration successful', 'user': user_response, 'token': token}), 201
 
     except Exception as e:
         print(f"Registration error: {e}")
@@ -629,6 +712,151 @@ def get_trends():
         
     except Exception as e:
         print(f"Error getting trends: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/users', methods=['GET'])
+def get_all_users():
+    """Get all registered users (admin endpoint)"""
+    users = load_users()
+    users_list = []
+    for email, user in users.items():
+        users_list.append({
+            'id': user.get('id'),
+            'email': email,
+            'name': user.get('name', ''),
+            'company': user.get('company', ''),
+            'created_at': user.get('created_at', ''),
+            'last_login': user.get('last_login', '')
+        })
+    
+    return jsonify({
+        'total_users': len(users_list),
+        'users': users_list
+    }), 200
+
+@app.route('/api/user/profile', methods=['GET', 'PUT', 'OPTIONS'])
+def user_profile():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
+    try:
+        # Get user from token
+        auth_header = request.headers.get('Authorization')
+        token = auth_header.split(" ")[1] if auth_header and " " in auth_header else None
+        
+        if not token:
+             return jsonify({'error': 'Token missing'}), 401
+
+        payload = security_service.verify_token(token)
+        if not payload:
+             return jsonify({'error': 'Invalid token'}), 401
+             
+        user_id = payload.get('sub')
+        users = load_users()
+        current_user = None
+        user_email = None
+        
+        for email, user in users.items():
+            if user.get('id') == user_id:
+                current_user = user
+                user_email = email
+                break
+        
+        if not current_user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if request.method == 'GET':
+            # mask password
+            user_data = {k: v for k, v in current_user.items() if k != 'password'}
+            return jsonify(user_data), 200
+            
+        if request.method == 'PUT':
+            data = request.get_json()
+            
+            # Update User Basic Info
+            if 'name' in data:
+                current_user['name'] = data['name']
+            if 'company' in data:
+                current_user['company'] = data['company']
+                
+            # Update Brand Config / Onboarding Info
+            # Ensure brand_config exists
+            if 'brand_config' not in current_user:
+                current_user['brand_config'] = {}
+            
+            # Check for direct brand config fields (compatibility with onboarding form style)
+            brand_fields = ['brandName', 'industry', 'competitors', 'keywords', 'website']
+            
+            for field in brand_fields:
+                if field in data:
+                    current_user['brand_config'][field] = data[field]
+            
+            # Also allow updating via nested object if sent
+            if 'brand_config' in data and isinstance(data['brand_config'], dict):
+                current_user['brand_config'].update(data['brand_config'])
+                
+            users[user_email] = current_user
+            save_users(users)
+            
+            # Update session if used suitable for hybrid
+            if session.get('user') and session['user'].get('id') == user_id:
+                 session['user'] = {k: v for k, v in current_user.items() if k != 'password'}
+
+            user_data = {k: v for k, v in current_user.items() if k != 'password'}
+            return jsonify({'message': 'Profile updated', 'user': user_data}), 200
+
+    except Exception as e:
+        print(f"Profile error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/onboarding', methods=['POST'])
+def onboarding():
+    try:
+        data = request.get_json()
+        
+        # Get user from token
+        auth_header = request.headers.get('Authorization')
+        token = auth_header.split(" ")[1] if auth_header else None
+        
+        company_id = f"comp_{uuid.uuid4().hex[:8]}"
+        
+        if token:
+            try:
+                payload = security_service.verify_token(token)
+                if payload:
+                    user_id = payload.get('sub') # 'sub' is standard for user_id in jwt
+                    
+                    # Update user in local storage
+                    users = load_users()
+                    user_found = False
+                    
+                    for email, user in users.items():
+                        if user.get('id') == user_id:
+                            user['company_id'] = company_id
+                            user['brand_config'] = {
+                                'brandName': data.get('brandName'),
+                                'industry': data.get('industry'),
+                                'competitors': data.get('competitors'),
+                                'keywords': data.get('keywords'),
+                                'website': data.get('website')
+                            }
+                            users[email] = user
+                            user_found = True
+                            break
+                    
+                    if user_found:
+                        save_users(users)
+                        print(f"Updated onboarding data for user {user_id}")
+            except Exception as token_err:
+                print(f"Token error in onboarding: {token_err}")
+
+        return jsonify({
+            'success': True,
+            'companyId': company_id,
+            'message': 'Onboarding complete'
+        })
+    except Exception as e:
+        print(f"Onboarding error: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

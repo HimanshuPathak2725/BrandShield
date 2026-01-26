@@ -1,47 +1,24 @@
-# Dependencies
-<<<<<<< HEAD
-node_modules
-.pnp
-.pnp.js
-
-# Testing
-coverage
-
-# Production
-build
-
-# Misc
-.DS_Store
-=======
-/node_modules
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Production
-/build
-
-# Misc
-.DS_Store
-.env
->>>>>>> ad481d1312145af96e215b5e3047b74e3e064006
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-<<<<<<< HEAD
-=======
+pnpm-debug.log*
+lerna-debug.log*
 
-# IDE
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
-.vscode
-*.swp
-*.swo
-*~
->>>>>>> ad481d1312145af96e215b5e3047b74e3e064006
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

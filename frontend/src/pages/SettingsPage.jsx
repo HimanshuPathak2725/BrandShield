@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, User, Bell, Shield, Database, Lock } from 'lucide-react';
+import { Save, User, Bell, Shield, Database, Lock, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const SettingsSection = ({ title, icon: Icon, children }) => (
@@ -10,7 +10,8 @@ const SettingsSection = ({ title, icon: Icon, children }) => (
   >
     <div className="flex items-center gap-3 mb-6 border-b border-slate-700/50 pb-4">
       <div className="p-2 rounded-lg bg-blue-500/10">
-        <Icon size={20} className="text-blue-400" />
+        {/* Icon can be added here if needed */}
+        {Icon && <Icon size={24} className="text-blue-400" />}
       </div>
       <h3 className="text-lg font-semibold text-slate-200">{title}</h3>
     </div>
@@ -36,24 +37,37 @@ const Toggle = ({ label, enabled, onChange }) => (
   </div>
 );
 
-const InputField = ({ label, type = "text", value, onChange, placeholder }) => (
+const InputField = ({ label, type = "text", value, onChange, placeholder, disabled = false }) => (
   <div className="mb-4">
     <label className="block text-sm font-medium text-slate-400 mb-1">{label}</label>
     <input
       type={type}
-      value={value}
+      value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+      disabled={disabled}
+      className={`w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500 transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     />
   </div>
 );
+  
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const SettingsPage = () => {
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
-    name: 'Admin User',
-    email: 'admin@brandshield.ai',
-    role: 'Administrator'
+    name: '',
+    email: '',
+    role: '',
+    company: ''
+  });
+
+  const [brandConfig, setBrandConfig] = useState({
+    brandName: '',
+    website: '',
+    industry: '',
+    competitors: '',
+    keywords: ''
   });
 
   const [notifications, setNotifications] = useState({
@@ -69,24 +83,106 @@ const SettingsPage = () => {
     frequency: 'realtime'
   });
 
-  const handleSave = () => {
-    // Determine user feedback (could be a toast in a real app)
-    alert("Settings saved successfully!");
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfile({
+            name: data.name || '',
+            email: data.email || '',
+            role: data.role || 'Admin', // default role
+            company: data.company || ''
+        });
+
+        if (data.brand_config) {
+            const config = data.brand_config;
+            setBrandConfig({
+                brandName: config.brandName || '',
+                website: config.website || '',
+                industry: config.industry || 'Tech',
+                competitors: Array.isArray(config.competitors) ? config.competitors.join(', ') : (config.competitors || ''),
+                keywords: Array.isArray(config.keywords) ? config.keywords.join(', ') : (config.keywords || '')
+            });
+        }
+      }
+    } catch (error) {
+        console.error("Failed to fetch profile", error);
+    } finally {
+        setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const payload = {
+          name: profile.name,
+          company: profile.company,
+          brand_config: {
+              ...brandConfig,
+              // convert comma-separated strings back to arrays if backend expects arrays
+              competitors: Array.isArray(brandConfig.competitors) ? brandConfig.competitors : brandConfig.competitors.split(',').map(s => s.trim()).filter(s => s),
+              keywords: Array.isArray(brandConfig.keywords) ? brandConfig.keywords : brandConfig.keywords.split(',').map(s => s.trim()).filter(s => s)
+          }
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert("Settings saved successfully!");
+        fetchProfile(); // refresh data
+      } else {
+        const err = await response.json();
+        alert(`Error saving settings: ${err.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+        console.error("Error saving settings", error);
+        alert("Error saving settings");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  if (loading && !profile.email) {
+      return <div className="p-10 text-white">Loading profile...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
       <div className="flex justify-between items-center mb-8">
         <div>
-           <h1 className="text-3xl font-bold text-white mb-2">System Settings</h1>
-           <p className="text-slate-400">Manage your organization preferences and configurations</p>
+           <h1 className="text-3xl font-bold text-white mb-2">User Profile & Settings</h1>
+           <p className="text-slate-400">Manage your account and brand configuration</p>
         </div>
         <button 
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/20"
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50"
         >
           <Save size={18} />
-          Save Changes
+          {loading ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -100,7 +196,8 @@ const SettingsPage = () => {
            <InputField 
              label="Email Address" 
              value={profile.email} 
-             onChange={(v) => setProfile({...profile, email: v})} 
+             onChange={(v) => {}} 
+             disabled={true}
            />
            <InputField 
              label="Role" 
@@ -108,7 +205,58 @@ const SettingsPage = () => {
              onChange={() => {}} 
              disabled
            />
+           <InputField 
+             label="Company" 
+             value={profile.company} 
+             onChange={(v) => setProfile({...profile, company: v})} 
+           />
         </div>
+      </SettingsSection>
+
+      <SettingsSection title="Brand Configuration (Onboarding)" icon={Building2}>
+         <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputField 
+                    label="Brand Name" 
+                    value={brandConfig.brandName} 
+                    onChange={(v) => setBrandConfig({...brandConfig, brandName: v})} 
+                    placeholder="e.g. Acme Corp"
+                />
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Industry</label>
+                    <select 
+                        value={brandConfig.industry}
+                        onChange={(e) => setBrandConfig({...brandConfig, industry: e.target.value})}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                    >
+                        <option value="Tech">Tech</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Airline">Airline</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <InputField 
+                label="Website" 
+                value={brandConfig.website} 
+                onChange={(v) => setBrandConfig({...brandConfig, website: v})} 
+                placeholder="https://example.com"
+            />
+            <InputField 
+                label="Competitors (comma separated)" 
+                value={brandConfig.competitors} 
+                onChange={(v) => setBrandConfig({...brandConfig, competitors: v})} 
+                placeholder="Competitor A, Competitor B"
+            />
+            <InputField 
+                label="Critical Keywords (comma separated)" 
+                value={brandConfig.keywords} 
+                onChange={(v) => setBrandConfig({...brandConfig, keywords: v})} 
+                placeholder="scam, lawsuit, outage"
+            />
+         </div>
       </SettingsSection>
 
       <SettingsSection title="Notification Preferences" icon={Bell}>

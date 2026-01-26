@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { 
   TrendingUp, 
@@ -24,13 +24,19 @@ const DashboardPage = () => {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/dashboard', {
+        const res = await fetch('/api/dashboard', {
            headers: { 'Authorization': `Bearer ${token}` } 
         });
         
         if (res.ok) {
            const json = await res.json();
            setData(json);
+        } else {
+           console.error("Dashboard fetch returned status:", res.status);
+           // Fallback to demo data if auth fails, or handle redirect
+           if (res.status === 401) {
+             // Optional: navigate('/auth');
+           }
         }
       } catch (e) {
         console.error("Dashboard fetch failed", e);

@@ -256,6 +256,38 @@ def login():
         print(f"Login error: {str(e)}")
         return jsonify({'error': 'Login failed', 'message': str(e)}), 500
 
+@app.route('/api/dashboard', methods=['GET', 'OPTIONS'])
+def get_dashboard_data():
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    # Mock data for dashboard
+    return jsonify({
+        "sentimentCounts": { "Positive": 72, "Neutral": 18, "Negative": 10 },
+        "sentimentScore": 0.62,
+        "velocityScore": 35,
+        "topMentions": [
+            {
+                "source": "Twitter",
+                "sentiment": "Positive",
+                "date": datetime.now().isoformat(),
+                "text": "The new product launch is exceeding all expectations! #BrandWin"
+            },
+            {
+                "source": "Reddit", 
+                "sentiment": "Neutral",
+                "date": datetime.now().isoformat(),
+                "text": "Does anyone know when the next update is coming out?"
+            },
+            {
+                "source": "News",
+                "sentiment": "Negative",
+                "date": datetime.now().isoformat(),
+                "text": "Competitor announces a rival product with lower pricing."
+            }
+        ]
+    }), 200
+
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
     """Logout user"""

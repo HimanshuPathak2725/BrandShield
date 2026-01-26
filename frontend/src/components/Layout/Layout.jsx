@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -14,6 +14,8 @@ import {
   LogOut,
   User
 } from 'lucide-react';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const SidebarItem = ({ icon: Icon, label, to, isCollapsed }) => {
   return (
@@ -43,11 +45,32 @@ const SidebarItem = ({ icon: Icon, label, to, isCollapsed }) => {
 const Layout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+    
+    // Clear all auth storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    
+    // Redirect to home page
+    navigate('/');
+  };
 
   const newsItems = [
     "BREAKING: Tesla mentions spike 200% following battery report...",
     "ALERT: Competitor launch detected in APAC region...",
-    "UPDATE: Sentiment recovering in North American sector..."
+    "UPDATE: Sentiment recovering in North American sector...",
+    "NEWS: New social media platform gaining traction among Gen Z...",
   ];
 
   return (
@@ -75,7 +98,7 @@ const Layout = () => {
         {/* Navigation */}
         <div className="flex-1 py-6 px-3 overflow-y-auto custom-scrollbar">
           <div className="space-y-1">
-            <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/dashboard" isCollapsed={isCollapsed} />
+            
             <SidebarItem icon={Activity} label="Live Feed" to="/dashboard" isCollapsed={isCollapsed} /> {/* Pointing to same for demo */}
             <SidebarItem icon={BarChart2} label="Analytics" to="/analytics" isCollapsed={isCollapsed} />
             <SidebarItem icon={ShieldAlert} label="Crisis Simulator" to="/simulator" isCollapsed={isCollapsed} />
@@ -101,7 +124,14 @@ const Layout = () => {
                  <div className="text-xs text-slate-500 truncate">admin@brandshield.ai</div>
                </div>
              )}
-             {!isCollapsed && <LogOut size={16} className="text-slate-500 hover:text-red-400" />}
+             {!isCollapsed && (
+                 <button onClick={(e) => {
+                     e.stopPropagation();
+                     handleLogout();
+                 }} className="p-1 hover:bg-slate-700/50 rounded transition-colors">
+                    <LogOut size={16} className="text-slate-500 hover:text-red-400" />
+                 </button>
+             )}
           </div>
         </div>
 

@@ -1,11 +1,26 @@
 {
   "nssofficialadgips@gmail.com": {
-    "id": "755fe01b-8412-414f-9437-7373202e14d6",
+    "id": "d2d9d02c-f72e-49e8-a399-91d3cfec2bb7",
     "email": "nssofficialadgips@gmail.com",
-    "password": "scrypt:32768:8:1$MVN8y75KwURjGDaO$d5cc863185e09b8ef108ba3bd864d4ef6896e95b0c25314af5c521b70058bb2a9fcf9edbd9406a0a9acc7e8faf49fd0b462cb9b2d902548be5212ac5f44c4108",
+    "password": "scrypt:32768:8:1$ylO1M5O3nGg8Rg4r$cc84644a45d968040919b1660c2cc4def108e902c7611a3859793ac60bedf7cb140fe7029386dbb74d8ac6007a90d9b46c812ae7e1de1bd27b5d94bf47f2f58c",
     "name": "Riya",
-    "company": "Adgips",
-    "created_at": "2026-01-11T16:18:37.845313",
-    "last_login": "2026-01-15T23:30:16.039271"
+    "company": "nss",
+    "created_at": "2026-01-26T18:28:36.320513",
+    "last_login": null,
+    "company_id": "comp_ebccc706",
+    "brand_config": {
+      "brandName": "Nike",
+      "industry": "Retail",
+      "competitors": [
+        "Adidas",
+        "Puma",
+        "Jordan"
+      ],
+      "keywords": [
+        "scam",
+        "fit"
+      ],
+      "website": "https://www.nike.com/in/"
+    }
   }
 }

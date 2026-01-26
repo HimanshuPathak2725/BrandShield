@@ -1,43 +1,70 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-slate-950 text-slate-50 antialiased;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Special+Gothic+Expanded+One&display=swap');
+
+/* body{
+  background-color: black;
+  color: white;
+} */
+
+@font-face {
+  font-family: font1;
+  src: url(../Lausanne-500.woff2);
 }
 
-@layer components {
-  .glass-panel {
-    @apply bg-slate-900/50 backdrop-blur-md border border-white/10 shadow-xl;
-  }
-  
-  .glass-card {
-    @apply bg-slate-800/40 backdrop-blur-sm border border-white/5 hover:bg-slate-800/60 transition-all duration-300;
-  }
-  
-  .nav-item-active {
-    @apply bg-blue-500/10 text-blue-400 border-l-2 border-blue-500;
-  }
+@font-face {
+  font-family: font2;
+  src: url(../Lausanne-300.woff2);
+}
+@font-face {
+  font-family: font3;
+  src: url(../9dcef913907d177d-s.p.woff2);
+}
+@font-face {
+  font-family: font4;
+  src: url(../231eb4a1ab154b5a-s.p.woff2);
+}
+@font-face {
+  font-family: font5;
+  src: url(../814dad51953cb2f1-s.p.woff2);
+}
+@font-face {
+  font-family: font6;
+  src: url(../d2f08f2d11942c7b-s.p.woff2);
 }
 
-@layer utilities {
-  .mask-linear-fade {
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-slate-900/50;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-700/50 rounded-full hover:bg-slate-600;
-  }
+/* @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap'); */
+
+
+.oswald {
+  font-family: 'Oswald', sans-serif;
 }
+
+
+.oswald-2 {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+
+.oswald-3 {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Hide scrollbar for Webkit browsers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
