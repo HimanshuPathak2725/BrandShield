@@ -5,7 +5,7 @@ import About from './pages/About.jsx'
 import Pricing from './pages/Pricing.jsx'
 import Stairs from './components/Stairs/Stairs.jsx'
 import NavContext from './components/NavContext/NavContext.jsx'
-import BlobCursor from './components/BlobCursor/BlobCursor.jsx'
+// import BlobCursor from './components/BlobCursor/BlobCursor.jsx'
 
 // Legacy Imports from App.js for Functionality
 import DashboardPage from './pages/Dashboard';
@@ -40,7 +40,7 @@ function App() {
 
   return (
     <>
-    <BlobCursor
+    {/* <BlobCursor
       blobType="circle"
       fillColor="#5227FF"
       trailCount={3}
@@ -57,7 +57,7 @@ function App() {
       fastDuration={0.1}
       slowDuration={0.5}
       zIndex={100}
-    />
+    /> */}
     <NavContext>
       
       <Stairs>
