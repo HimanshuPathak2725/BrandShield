@@ -91,4 +91,4 @@ Contact the DevSecOps team for access to the secure repository.
 
 ---
 
-**© 2024 BrandShield AI**
+**ï¿½ 2024 BrandShield AI**
