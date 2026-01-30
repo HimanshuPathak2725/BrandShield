@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/clerk-react";
 import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
 import Pricing from './pages/Pricing.jsx'
@@ -13,7 +14,6 @@ import Layout from './components/Layout/Layout';
 import ResultsPage from './pages/ResultsPage';
 import TrendsPage from './pages/TrendsPage/TrendsPage';
 import InsightsPage from './pages/InsightsPage/InsightsPage';
-import AuthPage from './pages/AuthPage/AuthPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import CrisisSimulatorPage from './pages/CrisisSimulatorPage';
 import SettingsPage from './pages/SettingsPage';
@@ -24,14 +24,30 @@ import Onboarding from './pages/Onboarding';
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/auth" replace />;
+  const { isLoaded, isSignedIn } = useAuth();
+  
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 
 function RedirectIfAuthenticated({ children }) {
-  const token = localStorage.getItem('token');
-  if (token) return <Navigate to="/dashboard" replace />;
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (isSignedIn) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
 }
 
@@ -40,6 +56,16 @@ function App() {
 
   return (
     <>
+    <header style={{ position: 'fixed', top: 10, right: 10, zIndex: 9999 }}>
+      <SignedOut>
+        <SignInButton mode="modal" className="bg-white text-black px-4 py-2 rounded shadow mr-2"/>
+        <SignUpButton mode="modal" className="bg-slate-900 text-white px-4 py-2 rounded shadow"/>
+      </SignedOut>
+      <SignedIn>
+        <UserButton />
+      </SignedIn>
+    </header>
+
     {/* <BlobCursor
       blobType="circle"
       fillColor="#5227FF"
@@ -66,11 +92,6 @@ function App() {
           <Route path='/' element={
             <RedirectIfAuthenticated>
               <Home/>
-            </RedirectIfAuthenticated>
-          }/>
-          <Route path='/auth' element={
-            <RedirectIfAuthenticated>
-              <AuthPage />
             </RedirectIfAuthenticated>
           }/>
 
@@ -107,5 +128,6 @@ function App() {
     </>
   )
 }
+
 
 export default App

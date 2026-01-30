@@ -7,18 +7,25 @@ import { BrowserRouter } from 'react-router-dom'
 import Footer from './components/Footer/Footer.jsx'
 import Stairs from './components/Stairs/Stairs.jsx'
 import BlobCursor from './components/BlobCursor/BlobCursor.jsx'
-// import FullScreenNav from './components/NavbarComp/FullScreenNav.jsx'
+import { ClerkProvider } from '@clerk/clerk-react'
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key")
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <BrowserRouter>
+      {/* <FullScreenNav> */}
+      <Stairs>
     
-    <BrowserRouter>
-    {/* <FullScreenNav> */}
-    <Stairs>
-  
-    <App />
-    </Stairs>
-    {/* </FullScreenNav > */}
-    </BrowserRouter>
+      <App />
+      </Stairs>
+      {/* </FullScreenNav > */}
+      </BrowserRouter>
+    </ClerkProvider>
   </StrictMode>,
 )

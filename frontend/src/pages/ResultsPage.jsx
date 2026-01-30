@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaBrain, FaHourglassHalf, FaArrowLeft } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { FaBrain, FaHourglassHalf, FaArrowLeft, FaExclamationCircle } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
 import ResultsHeader from '../components/ResultsHeader/ResultsHeader';
 import SentimentScore from '../components/SentimentScore/SentimentScore';
 import TrendWidget from '../components/TrendWidget/TrendWidget';
@@ -8,14 +8,13 @@ import AspectCards from '../components/AspectCards/AspectCards';
 import TopOpinions from '../components/TopOpinions/TopOpinions';
 import EmotionVelocityMonitor from '../components/EmotionVelocityMonitor/EmotionVelocityMonitor';
 import ResponseStrategies from '../components/ResponseStrategies/ResponseStrategies';
-import DigitalTwinSimulation from '../components/DigitalTwinSimulation/DigitalTwinSimulation';
 import AIInsight from '../components/AIInsight/AIInsight';
 import './ResultsPage.css';
 
 function ResultsPage() {
+  const navigate = useNavigate();
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeSimulation, setActiveSimulation] = useState(null);
 
   useEffect(() => {
     // Load analysis data from localStorage
@@ -31,11 +30,7 @@ function ResultsPage() {
   }, []);
 
   const handleRunSimulation = (strategyId) => {
-    setActiveSimulation({ status: 'running', strategyId });
-    // Simulate API delay
-    setTimeout(() => {
-       setActiveSimulation({ status: 'complete', strategyId });
-    }, 2000);
+    navigate('/simulator');
   };
 
   if (loading) {
@@ -204,6 +199,11 @@ function ResultsPage() {
 
   const velocityData = calculateVelocityData();
 
+  // Filter for Crisis Critical Data (High Severity Only)
+  const criticalFindings = analysisData.rag_findings 
+    ? analysisData.rag_findings.filter(f => (f.severity && (f.severity.toLowerCase() === 'high' || f.severity.toLowerCase() === 'critical'))) 
+    : [];
+
   return (
     <div className="results-page">
       <ResultsHeader brand={analysisData.brand} />
@@ -214,15 +214,36 @@ function ResultsPage() {
             <TrendWidget data={analysisData.risk_metrics} />
           </section>
 
-          <AspectCards findings={analysisData.rag_findings} />
-          <TopOpinions positiveOpinions={positiveOpinions.slice(0, 3)} negativeOpinions={negativeOpinions.slice(0, 3)} />
+          {/* Critical Issues Only */}
+          {criticalFindings.length > 0 ? (
+             <AspectCards findings={criticalFindings} />
+          ) : (
+             <div className="glass-panel p-6 mb-6 text-center text-gray-500 border border-slate-700/50 rounded-xl">
+                <FaExclamationCircle className="mx-auto mb-2 text-xl opacity-50" />
+                No Critical Severity Issues Detected. Showing general analysis.
+             </div>
+          )}
+
+          {/* Show Negative Opinions Only (Crisis Critical View) */}
+          <TopOpinions positiveOpinions={[]} negativeOpinions={negativeOpinions.slice(0, 6)} />
+          
           <EmotionVelocityMonitor data={velocityData} />
-          <ResponseStrategies onSimulate={handleRunSimulation} />
-          <DigitalTwinSimulation simulationState={activeSimulation} />
+          
+          {/* Simulation Link via Strategies */}
+          <div className="simulation-cta-section my-8">
+             <h3 className="section-title text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <FaBrain className="text-blue-400"/> Crisis Response Strategy
+             </h3>
+             <p className="text-gray-400 mb-6 max-w-2xl">
+                Select a response strategy to enter the <strong>Digital Twin Simulator</strong> and predict public reaction.
+             </p>
+             <ResponseStrategies onSimulate={handleRunSimulation} />
+          </div>
+
           <AIInsight data={analysisData} />
           
-          {/* Display AI Findings */}
-          {analysisData.rag_findings && analysisData.rag_findings.length > 0 && (
+          {/* Display Critical AI Findings */}
+          {criticalFindings.length > 0 && (
             <section className="ai-findings-section" style={{
               backgroundColor: '#15172b',
               padding: '24px',
@@ -231,19 +252,19 @@ function ResultsPage() {
               border: '1px solid #323767',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
             }}>
-              <h3 style={{ marginBottom: '16px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FaBrain /> AI-Detected Issues
+              <h3 style={{ marginBottom: '16px', color: '#ff4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FaExclamationCircle /> Critical AI-Detected Issues
               </h3>
               <div className="findings-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                 gap: '16px'
               }}>
-                {analysisData.rag_findings.map((finding, idx) => (
+                {criticalFindings.map((finding, idx) => (
                   <div key={idx} style={{
                     padding: '16px',
                     backgroundColor: '#1c1f33',
-                    borderLeft: `4px solid ${finding.severity === 'high' ? '#DB4437' : finding.severity === 'medium' ? '#F4B400' : '#0F9D58'}`,
+                    borderLeft: '4px solid #DB4437',
                     borderRadius: '8px',
                     border: '1px solid #323767'
                   }}>
