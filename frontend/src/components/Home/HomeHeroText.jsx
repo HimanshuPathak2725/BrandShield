@@ -155,7 +155,11 @@ const HomeHeroText = () => {
 
 
       <div className='mx-[10%] mt-25 font-[font4]'>
-        <p> lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</p>
+        <h3>  
+
+Social media crises don’t wait. Neither should your response.</h3>
+
+<p>BrandShield is an AI-driven crisis intelligence platform that detects, predicts, and helps neutralize brand threats before they spiral out of control. Using advanced AI, real-time monitoring, and human-approved responses, BrandShield gives enterprises control when it matters most. </p>
       </div>
 
       {/* <div ref={miniImage} className="bg-red-500 h-[50vh] mx-[10vh] mt-40 w-[100vh] rounded-4xl flex items-center justify-end px-10">
@@ -212,10 +216,10 @@ const HomeHeroText = () => {
                 {/* HERO */}
                 <div className="max-w-4xl">
                   <h2 className="text-5xl font-[font2] md:text-6xl mt-10 font-semibold text-black tracking-tight leading-tight">
-                    Crafted to feel calm
+                    Experience the Difference
                   </h2>
                   <p className="mt-6 text-lg md:text-xl text-black/65 leading-relaxed max-w-2xl">
-                    Our intentions are designed to feel as calm as they look. Every interaction and transition is built to create clarity, confidence, and elegance.
+                    BrandShield isn’t just a monitoring tool — it’s a decision advantage when your reputation is on the line.  Our platform combines cutting-edge AI with human expertise to deliver real-time insights, predictive analytics, and actionable response strategies. Stay ahead of potential crises and protect your brand’s integrity with BrandShield.
                   </p>
                 </div>
 
@@ -252,9 +256,10 @@ const HomeHeroText = () => {
                 <div className="mt-14 rounded-4xl bg-black overflow-hidden shadow-2xl">
                   {/* <img src="/img3.jpeg" alt="visual" className="w-full h-[420px] object-cover" /> */}
                   <div className="mt-14 max-w-3xl">
-                    <h3 className="text-2xl  text-white px-15 md:text-3xl font-semibold bg-black text-white mb-4">Designed for focus</h3>
+                    <h3 className="text-2xl  text-white px-15 md:text-3xl font-semibold bg-black text-white mb-4">Enterprise-Ready
+</h3>
                     <p className="text-lg text-white px-15 leading-relaxed">
-                      Minimal interfaces reduce noise. Thoughtful motion guides attention. Every frame is purposeful.
+                      Encrypted audit logs, role-based access, and secure APIs by design.
                     </p>
                   </div>
 

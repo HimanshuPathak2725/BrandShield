@@ -292,7 +292,7 @@ const AboutPage = () => {
           <div className="text-white  
                   items-center justify-center 
                   h-full text-white text-center px-50 mx-5-">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Harum explicabo id, numquam, mollitia adipisci quidem, voluptates corrupti laborum quo ratione repellendus delectus! Minus eos delectus excepturi, consectetur dicta magni sed!</p>
+            <p> In today’s hyper-connected world, a single post can trigger a full-scale brand crisis within minutes. Traditional monitoring tools are reactive, slow, and often miss early warning signals.BrandShield is an autonomous AI crisis response system designed to detect, analyze, and help neutralize brand threats in real time.</p>
           </div>
         </div>
 
@@ -308,8 +308,8 @@ const AboutPage = () => {
 <div
   ref={blue}
   className="
-    bg-blue-200 rounded-4xl h-full w-[60%]
-    relative overflow-hidden p-8"
+    bg-black rounded-4xl h-full w-[60%]
+    relative overflow-hidden p-8 shadow-2xl"
 >
 
   {/* DEFAULT STATE */}
@@ -317,10 +317,10 @@ const AboutPage = () => {
                   transition-opacity duration-500
                   group-hover:opacity-0">
 
-    <h3 className="text-4xl font-bold text-black mb-3">
+    <h3 className="text-4xl font-bold text-white mb-3">
       Our Mission
     </h3>
-    <p className="text-lg text-black/70">
+    <p className="text-lg text-white/70">
       Hover to read more →
     </p>
   </div>
@@ -331,13 +331,12 @@ const AboutPage = () => {
                   transition-all duration-500
                   group-hover:opacity-100 group-hover:translate-y-0">
 
-    <h3 className="text-4xl font-bold text-black mb-4">
+    <h3 className="text-4xl font-bold text-white mb-4">
       Our Mission
     </h3>
 
-    <p className="text-lg text-black/80 leading-relaxed max-w-md">
-      We build immersive brand experiences that merge design,
-      technology, and storytelling to create unforgettable digital presence.
+    <p className="text-lg text-white/80 leading-relaxed max-w-md">
+      To help brands act early, respond responsibly, and protect trust in the digital age.
     </p>
 
   </div>
@@ -353,7 +352,7 @@ const AboutPage = () => {
       className="
         bg-orange-200 rounded-4xl h-full w-[120%]
         transition-all duration-500 ease-out
-        relative overflow-hidden
+        relative overflow-hidden shadow-2xl
 
         hover:w-full hover:z-30
 
@@ -367,7 +366,11 @@ const AboutPage = () => {
         group-hover:not-peer-hover:w-[40%]
       "
     >
-    <img src="\public\Ai_Chatbot.jpg" alt="Chatbot" />
+    <img 
+      src="\public\homeimg.png" 
+      alt="Chatbot" 
+      className="absolute inset-0 w-full h-full object-cover"
+    />
       </div>
 
   </div>
@@ -375,7 +378,7 @@ const AboutPage = () => {
 
 
         {/* Spacer */}
-        <div className="h-[40vh]"></div>
+        <div className="h-[25vh]"></div>
       </div>
       <div className="bg-white text-black">
 
