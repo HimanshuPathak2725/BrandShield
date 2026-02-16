@@ -30,8 +30,11 @@ def load_users():
 
 def save_users(users):
     """Save users to JSON file"""
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+    try:
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f, indent=2)
+    except Exception as e:
+        print(f"Warning: Could not save users to {USERS_FILE} (likely read-only environment): {e}")
 
 # Load existing users
 users_db = load_users()

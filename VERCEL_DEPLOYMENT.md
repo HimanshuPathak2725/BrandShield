@@ -106,6 +106,12 @@ If deployment fails:
 3. Select a previous successful deployment
 4. Click "Redeploy"
 
+### Requirements Updates (Deployment Fix)
+
+To fix "No space left on device" errors, we've swapped `requirements.txt` files:
+- **`requirements.txt`**: Now contains the *lightweight* API dependencies (formerly `requirements-api.txt`). This allows Vercel to install only what's needed.
+- **`requirements-full.txt`**: Contains the full list of ML dependencies (formerly `requirements.txt`). Use this for local development if you need the full ML pipeline (`pip install -r requirements-full.txt`).
+
 ## Support
 
 For issues:
