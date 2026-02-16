@@ -7,7 +7,7 @@ This project has been configured for seamless deployment on Vercel. All necessar
 ## 📋 Prerequisites
 
 1. **GitHub Account** - Project must be pushed to GitHub
-2. **Vercel Account** - Sign up at [vercel.com](https://vercel.com)
+2. **Vercel Account** - Sign up at [Vercel.com](https://vercel.com)
 3. **API Keys** - You'll need the following API keys as environment variables:
    - `EXA_API_KEY` - Exa API key
    - `HUGGINGFACEHUB_API_TOKEN` - HuggingFace token
