@@ -51,11 +51,17 @@ function AuthPage() {
         })
       });
 
-      const data = await response.json();
+      // Check if response body is empty
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+
+      const data = JSON.parse(text);
       console.log('Login response:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || data.message || 'Login failed');
       }
 
       // Store user data in localStorage
@@ -69,6 +75,8 @@ function AuthPage() {
       console.error('Login error:', err);
       if (err.message === 'Failed to fetch') {
         setError('Cannot connect to server. Please make sure the API server is running on http://localhost:5000');
+      } else if (err.message?.includes('Unexpected end of JSON')) {
+        setError('Server returned invalid response. Make sure the API server is running.');
       } else {
         setError(err.message || 'Login failed. Please try again.');
       }
@@ -114,11 +122,17 @@ function AuthPage() {
         })
       });
 
-      const data = await response.json();
+      // Check if response body is empty
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+
+      const data = JSON.parse(text);
       console.log('Registration response:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.error || data.message || 'Registration failed');
       }
 
       // Store user data in localStorage
@@ -134,6 +148,8 @@ function AuthPage() {
       console.error('Registration error:', err);
       if (err.message === 'Failed to fetch') {
         setError('Cannot connect to server. Please make sure the API server is running on http://localhost:5000');
+      } else if (err.message?.includes('Unexpected end of JSON')) {
+        setError('Server returned invalid response. Make sure the API server is running.');
       } else {
         setError(err.message || 'Registration failed. Please try again.');
       }

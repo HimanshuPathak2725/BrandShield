@@ -8,11 +8,12 @@ import os
 import sys
 import json
 import uuid
+import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-from flask_apscheduler import APScheduler
+# from flask_apscheduler import APScheduler
 from services.security_service import security_service
 
 # Load environment variables
@@ -30,14 +31,14 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'brandshield-secret-key-dev')
 
 # Initialize Scheduler
-scheduler = APScheduler()
-scheduler.init_app(app)
-scheduler.start()
+# scheduler = APScheduler()
+# scheduler.init_app(app)
+# scheduler.start()
 
 # --- SECURITY MIDDLEWARE ---
 def token_required(f):
     @wraps(f)
-    async def decorated(*args, **kwargs):
+    def decorated(*args, **kwargs):
         token = None
         auth_header = request.headers.get('Authorization')
         if auth_header and auth_header.startswith('Bearer '):
@@ -50,7 +51,7 @@ def token_required(f):
         if not payload:
             return jsonify({'message': 'Token is invalid or expired!'}), 401
             
-        return await f(*args, **kwargs)
+        return f(*args, **kwargs)
     return decorated
 
 # Configure CORS with explicit settings
@@ -81,7 +82,7 @@ def save_users(users):
 
 # --- AUTH ENDPOINTS ---
 @app.route('/api/auth/login', methods=['POST'])
-async def login():
+def login():
     data = request.get_json()
     # Check for email OR username
     username_or_email = data.get('email') or data.get('username')
@@ -116,10 +117,10 @@ async def login():
     return jsonify({'message': 'Invalid password'}), 401
 
 # --- BACKGROUND JOBS ---
-@scheduler.task('interval', id='scheduled_cleanup', hours=24)
-def scheduled_cleanup():
-    print("🧹 Running Scheduled Cleanup (Logs/Cache)...")
-    # Placeholder for actual cleanup logic
+# @scheduler.task('interval', id='scheduled_cleanup', hours=24)
+# def scheduled_cleanup():
+#     print("🧹 Running Scheduled Cleanup (Logs/Cache)...")
+#     # Placeholder for actual cleanup logic
 
 @app.route('/api/dashboard', methods=['GET', 'OPTIONS'])
 def get_dashboard_data():
@@ -200,7 +201,7 @@ def get_dashboard_data():
 
 @app.route('/api/action-center/approve', methods=['POST'])
 # @token_required # Uncomment to enforce security on this route
-async def approve_response():
+def approve_response():
     data = request.get_json()
     response_id = data.get('response_id')
     selected_idx = data.get('selected_index', 0)
@@ -208,14 +209,14 @@ async def approve_response():
     if not response_id:
         return jsonify({'error': 'Missing response_id'}), 400
         
-    result = await action_center.approve_response(response_id, selected_idx)
+    result = asyncio.run(action_center.approve_response(response_id, selected_idx))
     if not result:
         return jsonify({'error': 'Response not found'}), 404
         
     return jsonify({'status': 'approved', 'response': result.dict()})
 
 @app.route('/api/action-center/send', methods=['POST'])
-async def send_response():
+def send_response():
     data = request.get_json()
     response_id = data.get('response_id')
     channel = data.get('channel', 'simulation')
@@ -223,12 +224,12 @@ async def send_response():
     if not response_id:
         return jsonify({'error': 'Missing response_id'}), 400
 
-    success = await action_center.send_response(response_id, channel)
+    success = asyncio.run(action_center.send_response(response_id, channel))
     return jsonify({'status': 'sent' if success else 'failed'})
 
 @app.route('/api/action-center/latest', methods=['GET'])
-async def get_latest_action():
-    action = await action_center.get_latest_action()
+def get_latest_action():
+    action = asyncio.run(action_center.get_latest_action())
     if not action:
          # Mock fallback if no action exists yet for demo
          return jsonify({
@@ -339,7 +340,7 @@ def test_endpoint():
     })
 
 @app.route('/api/analyze', methods=['POST'])
-async def start_analysis():
+def start_analysis():
     """
     Start a new brand analysis
     Expected payload: { "brand": "Tesla", "data_source": "Reddit Discussions" }
@@ -375,7 +376,7 @@ async def start_analysis():
         # Run Phase 1 (Research & Analysis)
         print(f"Starting Phase 1 analysis for: {brand_name}")
         app1 = create_phase1_graph()
-        phase1_result = await app1.ainvoke(initial_state)
+        phase1_result = asyncio.run(app1.ainvoke(initial_state))
         
         # Generate session ID
         session_id = f"session_{len(analysis_sessions) + 1}"
@@ -418,7 +419,7 @@ async def start_analysis():
         }), 500
 
 @app.route('/api/analyze/<session_id>/finalize', methods=['POST'])
-async def finalize_analysis(session_id):
+def finalize_analysis(session_id):
     """
     Finalize analysis with approved replies
     Expected payload: { "approved_replies": [...] }
@@ -438,7 +439,7 @@ async def finalize_analysis(session_id):
         # Run Phase 2 (Strategy & Report)
         print(f"Starting Phase 2 for session: {session_id}")
         app2 = create_phase2_graph()
-        phase2_result = await app2.ainvoke(current_state)
+        phase2_result = asyncio.run(app2.ainvoke(current_state))
         
         # Update session
         session['state'] = phase2_result

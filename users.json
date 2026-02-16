@@ -22,5 +22,14 @@
       ],
       "website": "https://www.nike.com/in/"
     }
+  },
+  "abc@gmail.com": {
+    "id": "6bdcbb00-ee91-4cfd-8ced-71bb3a2b316d",
+    "email": "abc@gmail.com",
+    "password": "abc1234",
+    "name": "ayush",
+    "company": "abc",
+    "created_at": "2026-02-16T10:20:00.711907",
+    "last_login": "2026-02-16T10:20:10.056686"
   }
 }

@@ -74,7 +74,7 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans selection:bg-blue-500/30">
+    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-x-hidden font-sans selection:bg-blue-500/30">
       
       {/* Sidebar */}
       <motion.aside 
@@ -98,8 +98,7 @@ const Layout = () => {
         {/* Navigation */}
         <div className="flex-1 py-6 px-3 overflow-y-auto custom-scrollbar">
           <div className="space-y-1">
-            
-            <SidebarItem icon={Activity} label="Live Feed" to="/dashboard" isCollapsed={isCollapsed} /> {/* Pointing to same for demo */}
+            <SidebarItem icon={Activity} label="Live Feed" to="/dashboard" isCollapsed={isCollapsed} />
             <SidebarItem icon={BarChart2} label="Analytics" to="/analytics" isCollapsed={isCollapsed} />
             <SidebarItem icon={ShieldAlert} label="Crisis Simulator" to="/simulator" isCollapsed={isCollapsed} />
           </div>
@@ -203,7 +202,7 @@ const Layout = () => {
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: -10 }}
                transition={{ duration: 0.3 }}
-               className="h-full"
+               className="w-full"
              >
                <Outlet />
              </motion.div>

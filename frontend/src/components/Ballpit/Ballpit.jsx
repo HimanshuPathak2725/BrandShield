@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import React from 'react';
 
 import {
@@ -75,13 +75,37 @@ class x {
       console.error('Three: Missing canvas or id parameter');
     }
     this.canvas.style.display = 'block';
+    
+    // Add context loss handlers
+    this.canvas.addEventListener('webglcontextlost', (event) => {
+      console.warn('WebGL context lost');
+      event.preventDefault();
+    }, false);
+    
+    this.canvas.addEventListener('webglcontextrestored', () => {
+      console.warn('WebGL context restored');
+    }, false);
+    
     const e = {
       canvas: this.canvas,
       powerPreference: 'high-performance',
+      antialias: true,
+      alpha: true,
+      stencil: false,
+      depth: true,
+      failIfMajorPerformanceCaveat: false,
       ...(this.#e.rendererOptions ?? {})
     };
-    this.renderer = new s(e);
-    this.renderer.outputColorSpace = n;
+    try {
+      this.renderer = new s(e);
+      this.renderer.outputColorSpace = n;
+    } catch (err) {
+      console.error('Failed to create WebGL renderer:', err);
+      // Fallback: disable some features and try again
+      delete e.antialias;
+      this.renderer = new s(e);
+      this.renderer.outputColorSpace = n;
+    }
   }
   #g() {
     if (!(this.#e.size instanceof Object)) {
@@ -724,20 +748,34 @@ function createBallpit(e, t = {}) {
 const Ballpit = ({ className = '', followCursor = true, ...props }) => {
   const canvasRef = useRef(null);
   const spheresInstanceRef = useRef(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    spheresInstanceRef.current = createBallpit(canvas, { followCursor, ...props });
+    try {
+      spheresInstanceRef.current = createBallpit(canvas, { followCursor, ...props });
+    } catch (err) {
+      console.error('Error creating Ballpit:', err);
+      setError(true);
+    }
 
     return () => {
-      if (spheresInstanceRef.current) {
-        spheresInstanceRef.current.dispose();
+      try {
+        if (spheresInstanceRef.current) {
+          spheresInstanceRef.current.dispose();
+        }
+      } catch (err) {
+        console.error('Error disposing Ballpit:', err);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (error) {
+    return <div className={`${className} w-full h-full bg-gradient-to-br from-blue-600 to-purple-600`} />;
+  }
 
   return <canvas className={`${className} w-full h-full`} ref={canvasRef} />;
 };
