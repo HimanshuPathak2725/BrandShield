@@ -27,11 +27,14 @@ from services.alert_dispatcher import alert_dispatcher
 
 async def live_ingestion_node(state: AgentState) -> AgentState:
     print(f"📡 Ingesting live stream for: {state['topic']}")
-    keywords = [state['topic']]
-    posts = await ingestion_service.get_live_feed(keywords)
     
-    # Update raw content for RAG
-    # filtered_content will be set by evaluator
+    # NEW: Determine mode (from state if passed, or default)
+    # This allows the API to pass "scenario_mode" into the initial state
+    scenario = state.get('scenario_mode') 
+    
+    # Use the robust unified stream fetcher
+    posts = await ingestion_service.fetch_unified_stream(state['topic'], limit=30, scenario_mode=scenario)
+    
     return {"raw_content": posts}
 
 async def crisis_prediction_node(state: AgentState) -> AgentState:

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useClerk } from '@clerk/clerk-react';
 import { 
   LayoutDashboard, 
   Activity, 
@@ -46,24 +47,14 @@ const Layout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useClerk();
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      await signOut({ redirectUrl: '/' });
     } catch (error) {
       console.error('Logout failed:', error);
     }
-    
-    // Clear all auth storage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    
-    // Redirect to home page
-    navigate('/');
   };
 
   const newsItems = [

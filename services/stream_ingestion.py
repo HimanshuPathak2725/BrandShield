@@ -107,7 +107,30 @@ class StreamIngestionService:
             posts = [generate_mock_post("youtube", query)]
             
         return posts
-
+    async def fetch_unified_stream(self, query: str = "BrandShield", limit: int = 20, scenario_mode: str = None) -> List[Dict[str, Any]]:
+        """
+        Main entry point for data ingestion. 
+        Auto-switches between Real APIs and High-Fidelity Simulation based on config/availability.
+        
+        scenario_mode: 'battery_fire', 'privacy_breach', or None (Normal)
+        """
+        all_posts = []
+        
+        # 1. Try Real APIs if keys exist
+        if self.reddit or self.youtube:
+             r_posts = await self.fetch_reddit(query)
+             y_posts = await self.fetch_youtube(query)
+             all_posts = r_posts + y_posts
+        
+        # 2. If no data (APIs down or no keys), use Simulation Engine
+        if not all_posts:
+            print(f"⚠️  Live APIs unavailable. Engaging Neural Simulation Engine for: {query} (Mode: {scenario_mode or 'Standard'})")
+            from services.data_generator import generate_live_stream_batch
+            all_posts = generate_live_stream_batch(query, count=limit, scenario=scenario_mode)
+            
+        # 3. Sort by time
+        all_posts.sort(key=lambda x: x['timestamp'], reverse=True)
+        return all_posts
     async def fetch_news_rss(self, query: str) -> List[Dict[str, Any]]:
         # Google News RSS
         rss_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"

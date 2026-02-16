@@ -182,10 +182,12 @@ def evaluator_agent(state: AgentState) -> AgentState:
     for item in raw_content:
         try:
             # Parse the published date
-            if isinstance(item['published_date'], str):
-                pub_datetime = datetime.fromisoformat(item['published_date'].replace('Z', '+00:00'))
+            date_val = item.get('published_date') or item.get('timestamp')
+            
+            if isinstance(date_val, str):
+                pub_datetime = datetime.fromisoformat(date_val.replace('Z', '+00:00'))
             else:
-                pub_datetime = item['published_date']
+                pub_datetime = date_val
             
             # Ensure timezone awareness
             if pub_datetime.tzinfo is None:

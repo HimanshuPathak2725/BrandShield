@@ -9,16 +9,22 @@ function AnalysisForm() {
   const navigate = useNavigate();
   const [target, setTarget] = useState('');
   const [dataSource, setDataSource] = useState('Reddit Discussions');
+  const [scenarioMode, setScenarioMode] = useState(''); // Empty = Real-Time
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const dataSources = [
-    'Reddit Discussions',
-    'Twitter',
-    'News Articles',
-    'Product Reviews',
-    'TikTok',
-    'YouTube'
+    'Unified Stream (Reddit + YouTube + News)', // New Default
+    'Reddit Only',
+    'Twitter / X',
+    'News Aggregator'
+  ];
+
+  const scenarios = [
+    { id: '', label: '🟢 Real-Time Monitoring (Live API)' },
+    { id: 'battery_fire', label: '🔥 Simulation: Battery Fire Crisis' },
+    { id: 'privacy', label: '🛡️ Simulation: Data Privacy Breach' },
+    { id: 'outage', label: '🔌 Simulation: Service Outage' }
   ];
 
   const handleSubmit = async (e) => {
@@ -40,7 +46,8 @@ function AnalysisForm() {
         },
         body: JSON.stringify({
           brand: target,
-          data_source: dataSource
+          data_source: dataSource,
+          scenario_mode: scenarioMode // Pass the intent to backend
         })
       });
       
@@ -68,7 +75,7 @@ function AnalysisForm() {
       <div className="form-content">
         <h1 className="form-title">AI-Powered Brand Crisis Analysis</h1>
         <p className="form-description">
-          Real-time sentiment analysis and crisis prediction using advanced AI agents and semantic search.
+          Monitor real-time data or dispatch autonomous agents to simulate crisis scenarios.
         </p>
 
         {error && (
@@ -101,10 +108,33 @@ function AnalysisForm() {
               value={dataSource}
               onChange={(e) => setDataSource(e.target.value)}
               disabled={loading}
+              style={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
             >
               {dataSources.map((source) => (
                 <option key={source} value={source}>
                   {source}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label text-blue-400">OPERATION MODE</label>
+            <select
+              className="form-select"
+              value={scenarioMode}
+              onChange={(e) => setScenarioMode(e.target.value)}
+              disabled={loading}
+              style={{ backgroundColor: '#1e293b', borderColor: scenarioMode ? '#ef4444' : '#334155', color: scenarioMode ? '#fca5a5' : '#fff' }}
+            >
+              {[
+                { id: '', label: '🟢 Real-Time Monitoring (Live API)' },
+                { id: 'battery_fire', label: '🔥 Simulation: Battery Fire Crisis' },
+                { id: 'privacy', label: '🛡️ Simulation: Data Privacy Breach' },
+                { id: 'outage', label: '🔌 Simulation: Service Outage' }
+              ].map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
                 </option>
               ))}
             </select>
