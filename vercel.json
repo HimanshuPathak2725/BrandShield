@@ -1,0 +1,26 @@
+{
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "framework": "react",
+  "env": {
+    "PYTHON_VERSION": "3.11"
+  },
+  "functions": {
+    "api/app.py": {
+      "runtime": "python3.11",
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/app.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "status": 200
+    }
+  ]
+}

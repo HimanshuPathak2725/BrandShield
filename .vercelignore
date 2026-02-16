@@ -1,0 +1,52 @@
+# Vercel Ignore File
+# Python virtual environments
+.venv
+venv
+env
+
+# Node modules
+node_modules
+
+# Development files
+.env.local
+.env.*.local
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build artifacts
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# API server files
+api_server.py
+api_server_lite.py
+users.json
